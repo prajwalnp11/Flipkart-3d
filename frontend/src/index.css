@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: #F5F8FE;
+    color: #172B4D;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* Light Theme Glassmorphism & Cards */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+}
+
+.glass-panel-glow {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(40, 116, 240, 0.25);
+  box-shadow: 0 10px 40px rgba(40, 116, 240, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(216, 226, 236, 0.8);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+}
+
+.glass-button {
+  background: linear-gradient(135deg, #2874F0 0%, #0053C2 100%);
+  box-shadow: 0 4px 20px rgba(40, 116, 240, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-button:hover {
+  box-shadow: 0 6px 28px rgba(40, 116, 240, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Custom Clean Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.8);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(40, 116, 240, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(40, 116, 240, 0.8);
+}
+
+/* Hotspot Pulse Animation */
+@keyframes hotspotPulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(40, 116, 240, 0.7);
+  }
+  70% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 14px rgba(40, 116, 240, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(40, 116, 240, 0);
+  }
+}
+
+.pulse-hotspot {
+  animation: hotspotPulse 2s infinite cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+/* 3D Canvas Container */
+canvas {
+  touch-action: none;
+  outline: none;
+}
