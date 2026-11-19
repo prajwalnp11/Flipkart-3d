@@ -13,6 +13,7 @@ import { TelevisionModel } from './Models3D/TelevisionModel';
 import { RefrigeratorModel } from './Models3D/RefrigeratorModel';
 import { WashingMachineModel } from './Models3D/WashingMachineModel';
 import { CameraModel } from './Models3D/CameraModel';
+import { TabletModel } from './Models3D/TabletModel';
 import { SpeakerModel } from './Models3D/SpeakerModel';
 import { EarbudsModel } from './Models3D/EarbudsModel';
 import { MannequinModel } from './Models3D/MannequinModel';
@@ -30,6 +31,9 @@ function DynamicProductMesh({ modelType, color }) {
     case 'computer':
     case 'macbook':
       return <LaptopModel color={color} />;
+    case 'tablet':
+    case 'ipad':
+      return <TabletModel color={color} />;
     case 'headphones':
     case 'headset':
       return <HeadphonesModel color={color} />;

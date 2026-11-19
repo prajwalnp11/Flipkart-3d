@@ -41,14 +41,15 @@ function CameraRig() {
         break;
 
       case 'ENTERING':
-        targetCamPos.current.set(0, 1.8, 0.5);
-        targetLookAt.current.set(0, 1.8, -7);
+        // Smooth cinematic glide through the entrance doors into the ground floor lobby
+        targetCamPos.current.set(0, 2.6, 10.5);
+        targetLookAt.current.set(0, 1.4, 0);
         elevatorCurrentY.current = 0;
         break;
 
       case 'GROUND_LOBBY':
         targetCamPos.current.set(0, 2.6, 10.5);
-        targetLookAt.current.set(0, 1.4, 0.5);
+        targetLookAt.current.set(0, 1.4, 0);
         elevatorCurrentY.current = 0;
         break;
 
@@ -99,7 +100,7 @@ export function MallScene() {
   const currentView = useStore((state) => state.currentView);
   const selectedFloor = useStore((state) => state.selectedFloor);
 
-  const isExterior = currentView === 'EXTERIOR' || currentView === 'ENTERING';
+  const isExterior = currentView === 'EXTERIOR';
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#F5F8FE]">

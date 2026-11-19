@@ -292,10 +292,37 @@ def seed():
                     'name': 'battery',
                     'title': 'High-Density All-Day Battery',
                     'description': 'Optimised internal architecture with 100% recycled cobalt cells, enabling up to 33 hours continuous playback and 50% charge in 30 mins.',
-                    'hotspot_position': {'x': 0.0, 'y': -0.6, 'z': 0.05},
+                    'hotspot_position': {'x': 0.0, 'y': -0.4, 'z': -0.1},
                     'icon': 'BatteryCharging',
                     'badge_text': '33 HOURS',
                     'specs': {'Fast Charging': '30W MagSafe / USB-PD', 'Capacity': '4685 mAh'}
+                },
+                {
+                    'name': 'build',
+                    'title': 'Aerospace Grade 5 Titanium Body',
+                    'description': 'Forged with aerospace-grade 5 titanium alloy frame, micro-blasted matte glass back, and IP68 water resistance.',
+                    'hotspot_position': {'x': 0.42, 'y': 0.0, 'z': 0.0},
+                    'icon': 'ShieldCheck',
+                    'badge_text': 'GRADE 5 TITANIUM',
+                    'specs': {'Weight': '227 grams', 'Water Resistance': 'IP68 (6m depth)'}
+                },
+                {
+                    'name': 'speakers',
+                    'title': 'Studio-Grade Stereo Acoustic Speakers',
+                    'description': 'Custom dual speakers delivering immersive Spatial Audio with Dolby Atmos and rich bass response.',
+                    'hotspot_position': {'x': 0.22, 'y': -0.75, 'z': 0.05},
+                    'icon': 'Volume2',
+                    'badge_text': 'SPATIAL AUDIO',
+                    'specs': {'Acoustics': 'Stereo Speakers', 'Dolby': 'Dolby Atmos'}
+                },
+                {
+                    'name': 'charging_port',
+                    'title': 'USB-C 10Gb/s High-Speed Connector',
+                    'description': 'Universal USB 3 controller supporting up to 10Gb/s data transfer, DisplayPort 4K video out, and fast charging.',
+                    'hotspot_position': {'x': 0.0, 'y': -0.78, 'z': 0.0},
+                    'icon': 'Zap',
+                    'badge_text': '10GB/S USB 3',
+                    'specs': {'Speed': 'Up to 10Gb/s', 'Video': 'DisplayPort Out'}
                 }
             ],
             'reviews': [

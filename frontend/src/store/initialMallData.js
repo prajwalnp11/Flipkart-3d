@@ -191,6 +191,24 @@ export const DEFAULT_PRODUCTS = [
         icon: 'ShieldCheck',
         badge_text: 'GRADE 5 TITANIUM',
         specs: { 'Weight': '227 grams', 'Water Resistance': 'IP68 (6m depth)' }
+      },
+      {
+        name: 'speakers',
+        title: 'Studio-Grade Stereo Acoustic Speakers',
+        description: 'Custom dual speakers delivering immersive Spatial Audio with Dolby Atmos and rich bass response.',
+        hotspot_position: { x: 0.22, y: -0.75, z: 0.05 },
+        icon: 'Volume2',
+        badge_text: 'SPATIAL AUDIO',
+        specs: { 'Acoustics': 'Stereo Speakers', 'Dolby': 'Dolby Atmos' }
+      },
+      {
+        name: 'charging_port',
+        title: 'USB-C 10Gb/s High-Speed Connector',
+        description: 'Universal USB 3 controller supporting up to 10Gb/s data transfer, DisplayPort 4K video out, and fast charging.',
+        hotspot_position: { x: 0.0, y: -0.78, z: 0.0 },
+        icon: 'Zap',
+        badge_text: '10GB/S USB 3',
+        specs: { 'Speed': 'Up to 10Gb/s', 'Video': 'DisplayPort Out' }
       }
     ]
   },

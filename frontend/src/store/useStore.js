@@ -78,13 +78,8 @@ export const useStore = create((set, get) => ({
   enterStore: () => {
     sounds.playClick();
     sounds.startMallAmbient();
-    set({ currentView: 'ENTERING' });
-
-    // Open automatic sliding doors
-    setTimeout(() => {
-      sounds.playDoorOpen();
-      set({ doorOpen: true });
-    }, 400);
+    sounds.playDoorOpen();
+    set({ currentView: 'ENTERING', doorOpen: true });
 
     // Transition smoothly through doors into Ground Floor Lobby
     setTimeout(() => {
@@ -96,7 +91,7 @@ export const useStore = create((set, get) => ({
         elevatorFloorDisplay: 'G'
       });
       sounds.playElevatorDing();
-    }, 2400);
+    }, 1200);
   },
 
   // Return to Mall Exterior

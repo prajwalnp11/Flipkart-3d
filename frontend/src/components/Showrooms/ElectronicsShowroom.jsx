@@ -10,6 +10,7 @@ import { HeadphonesModel } from '../ProductViewer/Models3D/HeadphonesModel';
 import { SpeakerModel } from '../ProductViewer/Models3D/SpeakerModel';
 import { EarbudsModel } from '../ProductViewer/Models3D/EarbudsModel';
 import { CameraModel } from '../ProductViewer/Models3D/CameraModel';
+import { TabletModel } from '../ProductViewer/Models3D/TabletModel';
 
 // Interactive Product Table / Display Counter in the Showroom
 function InteractiveDisplayItem({ product, position, rotation = [0, 0, 0], scale = 0.55, children, label, brand, price }) {
@@ -140,6 +141,15 @@ export function ElectronicsShowroom({ floorY = 8 }) {
     floor_number: 1,
     model_3d_type: 'earbuds'
   };
+  const ipad = products.find((p) => p.slug === 'apple-ipad-pro-13-m4') || {
+    id: 104,
+    name: 'Apple iPad Pro 13" (M4 OLED)',
+    slug: 'apple-ipad-pro-13-m4',
+    brand: 'Apple',
+    price: 129900,
+    floor_number: 1,
+    model_3d_type: 'tablet'
+  };
 
   return (
     <group position={[0, floorY, 0]}>
@@ -261,22 +271,22 @@ export function ElectronicsShowroom({ floorY = 8 }) {
         {/* Zone Overhead Sign */}
         <group position={[0, 3.2, 0]}>
           <mesh>
-            <boxGeometry args={[2.8, 0.5, 0.06]} />
+            <boxGeometry args={[3.4, 0.5, 0.06]} />
             <meshStandardMaterial color="#FFFFFF" roughness={0.2} />
           </mesh>
           <mesh position={[0, 0.23, 0.02]}>
-            <boxGeometry args={[2.8, 0.04, 0.04]} />
+            <boxGeometry args={[3.4, 0.04, 0.04]} />
             <meshBasicMaterial color="#2874F0" />
           </mesh>
-          <Text position={[0, 0, 0.04]} fontSize={0.18} color="#172B4D" fontWeight={900}>
-            LAPTOPS & COMPUTERS
+          <Text position={[0, 0, 0.04]} fontSize={0.17} color="#172B4D" fontWeight={900}>
+            LAPTOPS, TABLETS & COMPUTERS
           </Text>
         </group>
 
         {/* Display Item 1: MacBook Pro 16" (Space Black) */}
         <InteractiveDisplayItem
           product={macbook}
-          position={[-1.1, 0.9, 0]}
+          position={[-1.4, 0.9, 0]}
           label={'MacBook Pro 16" M4'}
           brand="Apple"
           scale={0.5}
@@ -284,10 +294,21 @@ export function ElectronicsShowroom({ floorY = 8 }) {
           <LaptopModel color="#1C1D1F" />
         </InteractiveDisplayItem>
 
-        {/* Display Item 2: Ultrabook Studio (Silver) */}
+        {/* Display Item 2: Apple iPad Pro 13" (Tandem OLED) */}
+        <InteractiveDisplayItem
+          product={ipad}
+          position={[0, 0.9, 0]}
+          label={'iPad Pro 13" M4'}
+          brand="Apple"
+          scale={0.55}
+        >
+          <TabletModel color="#1C1D1F" />
+        </InteractiveDisplayItem>
+
+        {/* Display Item 3: Ultrabook Studio (Silver) */}
         <InteractiveDisplayItem
           product={macbook}
-          position={[1.1, 0.9, 0]}
+          position={[1.4, 0.9, 0]}
           label="Pro Studio Ultra 16"
           brand="Dell"
           scale={0.5}
