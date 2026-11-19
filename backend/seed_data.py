@@ -898,6 +898,317 @@ def seed():
                     'comment': 'Fill detergent once a month and forget it. Even at 1400 RPM spin speed it barely vibrates.'
                 }
             ]
+        },
+
+        # Product 10 (Floor 1): Sony Alpha A7 IV Mirrorless Camera
+        {
+            'name': 'Sony Alpha A7 IV Mirrorless Camera',
+            'slug': 'sony-alpha-a7-iv',
+            'brand': 'Sony',
+            'category': categories['mobiles'],
+            'floor': floors[1],
+            'price': 242990.00,
+            'original_price': 269990.00,
+            'discount_percentage': 10,
+            'rating': 4.9,
+            'review_count': 940,
+            'stock': 18,
+            'is_featured': True,
+            'showroom_slot': 4,
+            'position_x': 5.5,
+            'position_y': 1.1,
+            'position_z': -1.0,
+            'description': 'Full-frame 33MP Exmor R back-illuminated CMOS sensor with BIONZ XR processing engine. 4K 60p 10-bit 4:2:2 recording and real-time eye AF for human, animal, and bird.',
+            'specifications': {
+                'Sensor': '33MP Full-Frame Exmor R CMOS Sensor',
+                'Processor': 'BIONZ XR High-Speed Image Engine',
+                'Video': '4K 60p 10-bit 4:2:2 All-Intra recording',
+                'Autofocus': '759 phase-detection points with AI subject tracking',
+                'Stabilization': '5-axis in-body optical image stabilization (5.5 stops)'
+            },
+            'model_3d': {
+                'model_type': 'camera',
+                'scale': 1.15,
+                'camera_distance': 2.4,
+                'auto_rotate_speed': 0.8,
+                'color_options': [
+                    {'name': 'Matte Pro Black', 'hex': '#1C1D1F'},
+                    {'name': 'Graphite Grey', 'hex': '#374151'}
+                ]
+            },
+            'variants': [
+                {'variant_type': 'Kit', 'name': 'Body Only', 'value': 'body', 'price_modifier': 0},
+                {'variant_type': 'Kit', 'name': 'With 28-70mm Zoom Lens', 'value': 'kit', 'price_modifier': 20000}
+            ],
+            'features': [
+                {
+                    'name': 'sensor',
+                    'title': '33MP Exmor R Full-Frame Sensor',
+                    'description': 'Back-illuminated sensor with high sensitivity and low noise across ISO 50-204,800 range.',
+                    'hotspot_position': {'x': 0.0, 'y': 0.15, 'z': 0.45},
+                    'icon': 'Sparkles',
+                    'badge_text': '33MP FULL FRAME',
+                    'specs': {'Dynamic Range': '15+ Stops', 'Shutter': '10 fps Mechanical'}
+                },
+                {
+                    'name': 'display',
+                    'title': 'Vari-Angle Side-Opening Touch LCD',
+                    'description': '1.03-million-dot 3.0-type touch panel opens sideways for selfie and low-angle framing.',
+                    'hotspot_position': {'x': 0.0, 'y': 0.15, 'z': -0.45},
+                    'icon': 'Monitor',
+                    'badge_text': 'VARI-ANGLE',
+                    'specs': {'Size': '3.0 Inch', 'Touch': 'Full Touch Menu'}
+                }
+            ],
+            'reviews': [
+                {
+                    'author_name': 'Devrath Nair',
+                    'rating': 5,
+                    'title': 'Unmatched color science and autofocus',
+                    'comment': 'The autofocus locks onto bird and human eyes instantaneously. Exceptional dynamic range.'
+                }
+            ]
+        },
+
+        # Product 11 (Floor 1): JBL Charge 5 Pro Bluetooth Speaker
+        {
+            'name': 'JBL Charge 5 Pro Bluetooth Speaker',
+            'slug': 'jbl-charge-5',
+            'brand': 'JBL',
+            'category': categories['mobiles'],
+            'floor': floors[1],
+            'price': 15999.00,
+            'original_price': 18999.00,
+            'discount_percentage': 16,
+            'rating': 4.8,
+            'review_count': 3200,
+            'stock': 55,
+            'is_featured': True,
+            'showroom_slot': 5,
+            'position_x': 5.5,
+            'position_y': 1.1,
+            'position_z': 1.0,
+            'description': 'Bold JBL Original Pro Sound with an optimized long excursion driver, separate tweeter and dual pumping JBL bass radiators. Up to 20 hours of playtime and built-in powerbank.',
+            'specifications': {
+                'Output Power': '40W RMS (Woofer 30W + Tweeter 10W)',
+                'Battery Life': 'Up to 20 Hours (7500 mAh battery)',
+                'Waterproof': 'IP67 Waterproof & Dustproof',
+                'Connectivity': 'Bluetooth 5.1 & PartyBoost multi-speaker'
+            },
+            'model_3d': {
+                'model_type': 'speaker',
+                'scale': 1.25,
+                'camera_distance': 2.4,
+                'auto_rotate_speed': 0.8,
+                'color_options': [
+                    {'name': 'Flipkart Blue', 'hex': '#2874F0'},
+                    {'name': 'Squad Camo', 'hex': '#4B5563'},
+                    {'name': 'Stealth Black', 'hex': '#18181B'}
+                ]
+            },
+            'variants': [
+                {'variant_type': 'Color', 'name': 'Flipkart Blue', 'value': '#2874F0', 'price_modifier': 0},
+                {'variant_type': 'Color', 'name': 'Stealth Black', 'value': '#18181B', 'price_modifier': 0}
+            ],
+            'features': [
+                {
+                    'name': 'sound',
+                    'title': 'JBL Original Pro Sound 40W',
+                    'description': 'Dual passive radiators deliver deep, resonant punchy bass and crystalline high frequencies.',
+                    'hotspot_position': {'x': 0.0, 'y': 0.0, 'z': 0.4},
+                    'icon': 'Volume2',
+                    'badge_text': '40W RMS',
+                    'specs': {'Frequency Response': '60 Hz - 20 kHz'}
+                }
+            ],
+            'reviews': [
+                {
+                    'author_name': 'Ankit Verma',
+                    'rating': 5,
+                    'title': 'The bass vibrates the entire room',
+                    'comment': 'Took it to the pool and beach with zero worries about water or sand. Battery lasts days.'
+                }
+            ]
+        },
+
+        # Product 12 (Floor 1): Apple AirPods Pro 2
+        {
+            'name': 'Apple AirPods Pro 2 (USB-C)',
+            'slug': 'apple-airpods-pro-2',
+            'brand': 'Apple',
+            'category': categories['mobiles'],
+            'floor': floors[1],
+            'price': 24900.00,
+            'original_price': 26900.00,
+            'discount_percentage': 7,
+            'rating': 4.9,
+            'review_count': 5400,
+            'stock': 60,
+            'is_featured': True,
+            'showroom_slot': 6,
+            'position_x': 0.0,
+            'position_y': 1.1,
+            'position_z': -1.0,
+            'description': 'Rebuilt from the sound up with the Apple-designed H2 chip. Up to 2x more Active Noise Cancellation, Adaptive Audio, and Personalized Spatial Audio with dynamic head tracking.',
+            'specifications': {
+                'Chip': 'Apple H2 headphone chip & Apple U1 in charging case',
+                'ANC': 'Up to 2x more Active Noise Cancellation with Transparency mode',
+                'Battery': 'Up to 6 hours listening (up to 30 hours with MagSafe case)',
+                'Charging': 'MagSafe (USB-C), Apple Watch charger or Qi certified'
+            },
+            'model_3d': {
+                'model_type': 'earbuds',
+                'scale': 1.4,
+                'camera_distance': 2.0,
+                'auto_rotate_speed': 0.8,
+                'color_options': [
+                    {'name': 'Gloss White', 'hex': '#FFFFFF'}
+                ]
+            },
+            'variants': [
+                {'variant_type': 'Edition', 'name': 'USB-C MagSafe Case', 'value': 'usbc', 'price_modifier': 0}
+            ],
+            'features': [
+                {
+                    'name': 'anc',
+                    'title': 'Pro-Grade Active Noise Cancellation',
+                    'description': 'Acoustic algorithms eliminate unwanted ambient sounds in real time with 48,000 noise reductions per second.',
+                    'hotspot_position': {'x': 0.25, 'y': 0.2, 'z': 0.1},
+                    'icon': 'Volume2',
+                    'badge_text': '2X NOISE CANCELLATION',
+                    'specs': {'Driver': 'Custom high-excursion Apple driver'}
+                }
+            ],
+            'reviews': [
+                {
+                    'author_name': 'Pooja Reddy',
+                    'rating': 5,
+                    'title': 'ANC makes flights whisper quiet',
+                    'comment': 'Adaptive audio switches flawlessly between noise cancellation and transparency when people speak.'
+                }
+            ]
+        },
+
+        # Product 13 (Floor 2): Armani Exchange Tailored Slim Blazer
+        {
+            'name': 'Armani Exchange Tailored Slim Blazer',
+            'slug': 'armani-exchange-blazer',
+            'brand': 'Armani Exchange',
+            'category': categories['fashion'],
+            'floor': floors[2],
+            'price': 18990.00,
+            'original_price': 24990.00,
+            'discount_percentage': 24,
+            'rating': 4.7,
+            'review_count': 420,
+            'stock': 15,
+            'is_featured': True,
+            'showroom_slot': 1,
+            'position_x': -4.5,
+            'position_y': 1.1,
+            'position_z': -1.0,
+            'description': 'Contemporary single-breasted blazer in fine stretch wool blend. Structured shoulders, notched lapels, and tailored European slim-fit silhouette.',
+            'specifications': {
+                'Material': '70% Virgin Wool, 28% Viscose, 2% Elastane',
+                'Cut': 'Slim Fit Single Breasted',
+                'Lining': '100% Cupro Silk Blend',
+                'Care': 'Dry Clean Only'
+            },
+            'model_3d': {
+                'model_type': 'mannequin',
+                'scale': 0.82,
+                'camera_distance': 3.0,
+                'auto_rotate_speed': 0.6,
+                'color_options': [
+                    {'name': 'Midnight Navy', 'hex': '#1E293B'},
+                    {'name': 'Charcoal Black', 'hex': '#111827'}
+                ]
+            },
+            'variants': [
+                {'variant_type': 'Size', 'name': 'Size 38 (M)', 'value': '38', 'price_modifier': 0},
+                {'variant_type': 'Size', 'name': 'Size 40 (L)', 'value': '40', 'price_modifier': 0},
+                {'variant_type': 'Size', 'name': 'Size 42 (XL)', 'value': '42', 'price_modifier': 0}
+            ],
+            'features': [
+                {
+                    'name': 'build',
+                    'title': 'Italian Virgin Wool Fabric',
+                    'description': 'Finely spun virgin wool blend offering natural wrinkle resistance, luxurious drape, and all-season breathability.',
+                    'hotspot_position': {'x': 0.0, 'y': 0.5, 'z': 0.25},
+                    'icon': 'Feather',
+                    'badge_text': 'VIRGIN WOOL',
+                    'specs': {'Weave': 'Fine Twill', 'Feel': 'Soft Tailored'}
+                }
+            ],
+            'reviews': [
+                {
+                    'author_name': 'Rohan Saxena',
+                    'rating': 5,
+                    'title': 'Impeccable fitting and drape',
+                    'comment': 'Fits like a glove straight out of the box. The stretch wool is comfortable for all-day conferences.'
+                }
+            ]
+        },
+
+        # Product 14 (Floor 2): Gucci Horsebit 1955 Leather Handbag
+        {
+            'name': 'Gucci Horsebit 1955 Leather Handbag',
+            'slug': 'gucci-horsebit-1955',
+            'brand': 'Gucci',
+            'category': categories['fashion'],
+            'floor': floors[2],
+            'price': 245000.00,
+            'original_price': 275000.00,
+            'discount_percentage': 11,
+            'rating': 4.9,
+            'review_count': 180,
+            'stock': 8,
+            'is_featured': True,
+            'showroom_slot': 2,
+            'position_x': 4.5,
+            'position_y': 1.1,
+            'position_z': -1.0,
+            'description': 'Introduced for Cruise 2020, the Gucci Horsebit 1955 bag is recreated from an archival design with the iconic double ring and bar horsebit hardware.',
+            'specifications': {
+                'Material': 'Italian Grain Leather with Microfiber suede lining',
+                'Hardware': 'Gold-toned Horsebit detail at front',
+                'Strap': 'Adjustable shoulder strap with 25cm drop',
+                'Origin': 'Made in Italy'
+            },
+            'model_3d': {
+                'model_type': 'handbag',
+                'scale': 1.2,
+                'camera_distance': 2.4,
+                'auto_rotate_speed': 0.6,
+                'color_options': [
+                    {'name': 'Cuir Brown Leather', 'hex': '#8B4513'},
+                    {'name': 'Obsidian Black', 'hex': '#18181B'},
+                    {'name': 'Ivory Cream', 'hex': '#FDFBF7'}
+                ]
+            },
+            'variants': [
+                {'variant_type': 'Color', 'name': 'Cuir Brown', 'value': '#8B4513', 'price_modifier': 0},
+                {'variant_type': 'Color', 'name': 'Obsidian Black', 'value': '#18181B', 'price_modifier': 0}
+            ],
+            'features': [
+                {
+                    'name': 'build',
+                    'title': 'Gold-Toned Equestrian Horsebit Clasp',
+                    'description': 'Precision-milled brass hardware with 24K gold flash finish honoring the iconic archival equestrian motif.',
+                    'hotspot_position': {'x': 0.0, 'y': 0.2, 'z': 0.25},
+                    'icon': 'ShieldCheck',
+                    'badge_text': 'ARCHIVAL HARDWARE',
+                    'specs': {'Material': '24K Gold-Flashed Brass'}
+                }
+            ],
+            'reviews': [
+                {
+                    'author_name': 'Meera Singhania',
+                    'rating': 5,
+                    'title': 'Timeless heritage luxury',
+                    'comment': 'Stunning craftsmanship. The leather grain is exceptionally supple and the gold hardware is flawless.'
+                }
+            ]
         }
     ]
 
