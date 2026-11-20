@@ -11,6 +11,8 @@ env/
 *.log
 local_settings.py
 media/
+staticfiles/
+backend/staticfiles/
 
 # Node / React / Vite
 node_modules/

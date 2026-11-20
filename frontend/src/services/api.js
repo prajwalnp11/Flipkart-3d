@@ -1,7 +1,13 @@
 // API Service for Flipkart 3D Mall
 // Seamless integration with Django REST Framework backend
 
-const API_BASE = '/api';
+const getApiBase = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!envUrl) return '/api';
+  return envUrl.endsWith('/api') ? envUrl : envUrl.replace(/\/$/, '') + '/api';
+};
+
+const API_BASE = getApiBase();
 
 // Generate or retrieve persistent anonymous session ID for cart
 function getSessionId() {
