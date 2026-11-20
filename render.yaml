@@ -27,17 +27,16 @@ services:
     name: flipkart-3d-frontend
     runtime: static
     region: oregon
-    plan: free
     branch: main
     buildCommand: "cd frontend && npm install && npm run build"
     staticPublishPath: "./frontend/dist"
     envVars:
       - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: flipkart-3d-backend
-          property: host
+        value: https://flipkart-3d-backend.onrender.com/api
     routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://flipkart-3d-backend.onrender.com/api/*
       - type: rewrite
         source: /*
         destination: /index.html
