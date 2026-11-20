@@ -21,7 +21,9 @@ const FLOOR_Y_MAP = {
 // Camera Rig that smoothly animates camera position & lookAt between mall floors and elevator
 function CameraRig() {
   const currentView = useStore((state) => state.currentView);
+  const phase = useStore((state) => state.phase);
   const selectedFloor = useStore((state) => state.selectedFloor);
+  const currentFloor = useStore((state) => state.currentFloor);
   const targetFloor = useStore((state) => state.targetFloor);
 
   const targetCamPos = useRef(new THREE.Vector3(0, 3.6, 18));
@@ -29,60 +31,55 @@ function CameraRig() {
   const currentLookAt = useRef(new THREE.Vector3(0, 5.2, -2));
   const elevatorCurrentY = useRef(0);
 
+  const activeFloor = selectedFloor !== undefined ? selectedFloor : currentFloor;
+
   useFrame((state, delta) => {
-    const currentFloorY = FLOOR_Y_MAP[selectedFloor] ?? 0;
+    const currentFloorY = FLOOR_Y_MAP[activeFloor] ?? 0;
     const destFloorY = FLOOR_Y_MAP[targetFloor] ?? 0;
 
-    switch (currentView) {
-      case 'EXTERIOR':
-        targetCamPos.current.set(0, 3.6, 18);
-        targetLookAt.current.set(0, 5.2, -2);
-        elevatorCurrentY.current = 0;
-        break;
+    const isExteriorPhase = currentView === 'EXTERIOR' || phase === 'exterior';
+    const isEnteringPhase = currentView === 'ENTERING' || phase === 'entering';
+    const isLobbyPhase = currentView === 'GROUND_LOBBY' || phase === 'lobby';
+    const isToElevatorPhase = currentView === 'TRANSITION_ELEVATOR' || phase === 'toElevator';
+    const isRidingPhase = currentView === 'IN_ELEVATOR' || phase === 'riding';
+    const isShowroomPhase = currentView === 'SHOWROOM' || phase === 'showroom';
 
-      case 'ENTERING':
-        // Smooth cinematic glide through the entrance doors into the ground floor lobby
-        targetCamPos.current.set(0, 2.6, 10.5);
-        targetLookAt.current.set(0, 1.4, 0);
-        elevatorCurrentY.current = 0;
-        break;
-
-      case 'GROUND_LOBBY':
-        targetCamPos.current.set(0, 2.6, 10.5);
-        targetLookAt.current.set(0, 1.4, 0);
-        elevatorCurrentY.current = 0;
-        break;
-
-      case 'TRANSITION_ELEVATOR':
-        // Camera smoothly moves towards the glass elevator entrance at current floor
-        targetCamPos.current.set(0, currentFloorY + 1.8, -4.2);
-        targetLookAt.current.set(0, currentFloorY + 1.8, -7.0);
-        elevatorCurrentY.current = currentFloorY;
-        break;
-
-      case 'IN_ELEVATOR':
-        // Camera rides inside the panoramic glass elevator cab during vertical transit
-        elevatorCurrentY.current = THREE.MathUtils.lerp(
-          elevatorCurrentY.current,
-          destFloorY,
-          1.8 * delta
-        );
-        targetCamPos.current.set(0, elevatorCurrentY.current + 1.75, -6.8);
-        // Look outward through front panoramic glass into the open central atrium
-        targetLookAt.current.set(0, elevatorCurrentY.current + 1.75, 4.5);
-        break;
-
-      case 'SHOWROOM':
-        // Inside the selected showroom floor
-        elevatorCurrentY.current = currentFloorY;
-        targetCamPos.current.set(0, currentFloorY + 2.5, 9.2);
-        targetLookAt.current.set(0, currentFloorY + 1.4, 0);
-        break;
-
-      default:
-        targetCamPos.current.set(0, currentFloorY + 2.5, 9.2);
-        targetLookAt.current.set(0, currentFloorY + 1.4, 0);
-        break;
+    if (isExteriorPhase) {
+      targetCamPos.current.set(0, 3.6, 18);
+      targetLookAt.current.set(0, 5.2, -2);
+      elevatorCurrentY.current = 0;
+    } else if (isEnteringPhase) {
+      // Smooth cinematic glide through the entrance doors into the ground floor lobby
+      targetCamPos.current.set(0, 2.6, 10.5);
+      targetLookAt.current.set(0, 1.4, 0);
+      elevatorCurrentY.current = 0;
+    } else if (isLobbyPhase) {
+      targetCamPos.current.set(0, 2.6, 10.5);
+      targetLookAt.current.set(0, 1.4, 0);
+      elevatorCurrentY.current = 0;
+    } else if (isToElevatorPhase) {
+      // Camera smoothly moves towards the glass elevator entrance at current floor
+      targetCamPos.current.set(0, currentFloorY + 1.8, -4.2);
+      targetLookAt.current.set(0, currentFloorY + 1.8, -7.0);
+      elevatorCurrentY.current = currentFloorY;
+    } else if (isRidingPhase) {
+      // Camera rides inside the panoramic glass elevator cab during vertical transit
+      elevatorCurrentY.current = THREE.MathUtils.lerp(
+        elevatorCurrentY.current,
+        destFloorY,
+        1.8 * delta
+      );
+      targetCamPos.current.set(0, elevatorCurrentY.current + 1.75, -6.8);
+      // Look outward through front panoramic glass into the open central atrium
+      targetLookAt.current.set(0, elevatorCurrentY.current + 1.75, 4.5);
+    } else if (isShowroomPhase) {
+      // Inside the selected showroom floor
+      elevatorCurrentY.current = currentFloorY;
+      targetCamPos.current.set(0, currentFloorY + 2.5, 9.2);
+      targetLookAt.current.set(0, currentFloorY + 1.4, 0);
+    } else {
+      targetCamPos.current.set(0, currentFloorY + 2.5, 9.2);
+      targetLookAt.current.set(0, currentFloorY + 1.4, 0);
     }
 
     // Smooth camera position dampening
@@ -96,11 +93,53 @@ function CameraRig() {
   return null;
 }
 
+// Adaptive Performance Monitor (UX Principle #8)
+function AdaptivePerformanceMonitor() {
+  const quality = useStore((state) => state.quality);
+  const setQuality = useStore((state) => state.setQuality);
+  const addToast = useStore((state) => state.addToast);
+
+  const fpsHistory = useRef([]);
+  const lastCheck = useRef(0);
+
+  useFrame((_, delta) => {
+    const fps = 1 / Math.max(delta, 0.001);
+    fpsHistory.current.push(fps);
+    if (fpsHistory.current.length > 180) {
+      fpsHistory.current.shift();
+    }
+
+    lastCheck.current += delta;
+    if (lastCheck.current > 3.0) {
+      lastCheck.current = 0;
+      if (fpsHistory.current.length >= 60) {
+        const avgFps = fpsHistory.current.reduce((a, b) => a + b, 0) / fpsHistory.current.length;
+        if (avgFps < 30) {
+          if (quality === 'high') {
+            setQuality('medium');
+            addToast('Graphics Adjusted', 'Adjusted graphics for smoother experience.', 'info');
+          } else if (quality === 'medium') {
+            setQuality('low');
+            addToast('Graphics Adjusted', 'Adjusted graphics for smoother experience.', 'info');
+          }
+        }
+      }
+    }
+  });
+
+  return null;
+}
+
 export function MallScene() {
   const currentView = useStore((state) => state.currentView);
-  const selectedFloor = useStore((state) => state.selectedFloor);
+  const phase = useStore((state) => state.phase);
+  const quality = useStore((state) => state.quality || 'high');
 
-  const isExterior = currentView === 'EXTERIOR';
+  const isExterior = currentView === 'EXTERIOR' && phase === 'exterior';
+
+  const dpr = quality === 'high' ? [1, 2] : quality === 'medium' ? [1, 1.5] : 1;
+  const shadowMapSize = quality === 'high' ? [2048, 2048] : [1024, 1024];
+  const shadowsEnabled = quality !== 'low';
 
   return (
     <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#F5F8FE]">
@@ -112,7 +151,7 @@ export function MallScene() {
           toneMapping: THREE.ACESFilmicToneMapping,
           toneMappingExposure: 1.15
         }}
-        dpr={[1, 2]}
+        dpr={dpr}
       >
         {/* Bright daylight sky background and soft atmospheric fog */}
         <color attach="background" args={['#F5F8FE']} />
@@ -128,12 +167,12 @@ export function MallScene() {
         {/* Ambient base fill light */}
         <ambientLight intensity={0.55} color="#FFFFFF" />
 
-        {/* Primary Sunlight (Directional with high-res soft shadows) */}
+        {/* Primary Sunlight (Directional with soft shadows) */}
         <directionalLight
           position={[14, 28, 14]}
           intensity={1.5}
-          castShadow
-          shadow-mapSize={[2048, 2048]}
+          castShadow={shadowsEnabled}
+          shadow-mapSize={shadowMapSize}
           shadow-bias={-0.0001}
           color="#FFFFFF"
         />
@@ -172,7 +211,10 @@ export function MallScene() {
         )}
 
         <CameraRig />
+        <AdaptivePerformanceMonitor />
       </Canvas>
     </div>
   );
 }
+
+export default MallScene;

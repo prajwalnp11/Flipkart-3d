@@ -1,74 +1,97 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from '../../store/useStore';
-import { Layers, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowUp, ArrowDown, FastForward } from 'lucide-react';
 
 export function ElevatorHUD() {
   const currentView = useStore((state) => state.currentView);
+  const phase = useStore((state) => state.phase);
   const targetFloor = useStore((state) => state.targetFloor);
   const selectedFloor = useStore((state) => state.selectedFloor);
+  const currentFloor = useStore((state) => state.currentFloor);
   const elevatorFloorDisplay = useStore((state) => state.elevatorFloorDisplay);
   const elevatorMoving = useStore((state) => state.elevatorMoving);
+  const skipCinematic = useStore((state) => state.skipCinematic);
   const floors = useStore((state) => state.floors);
 
-  if (currentView !== 'IN_ELEVATOR' && currentView !== 'TRANSITION_ELEVATOR') {
+  const isInElevator =
+    currentView === 'IN_ELEVATOR' ||
+    currentView === 'TRANSITION_ELEVATOR' ||
+    phase === 'toElevator' ||
+    phase === 'riding' ||
+    phase === 'arriving';
+
+  if (!isInElevator) {
     return null;
   }
 
+  const activeFloor = selectedFloor !== undefined ? selectedFloor : currentFloor;
   const targetFloorObj = floors.find((f) => f.floor_number === targetFloor) || {
     name: `Floor ${targetFloor}`,
     short_title: `FLOOR ${targetFloor}`
   };
 
-  const isGoingUp = targetFloor >= selectedFloor;
+  const isGoingUp = targetFloor >= activeFloor;
 
   return (
-    <div className="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-between p-8">
-      {/* Top Elevator Info Bar */}
+    <div className="absolute inset-0 z-30 pointer-events-none flex flex-col items-center justify-between p-6 md:p-8">
+      {/* Top Elevator Info Bar & Skip Ride Button */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="px-6 py-3.5 rounded-2xl flex items-center gap-4 bg-white/95 backdrop-blur-md border border-slate-200 text-navy-dark shadow-xl"
+        className="flex items-center gap-3"
       >
-        <div className="flex items-center gap-1.5 text-flipkart-blue font-black text-sm">
-          {isGoingUp ? (
-            <ArrowUp className="w-5 h-5 animate-bounce text-flipkart-blue" />
-          ) : (
-            <ArrowDown className="w-5 h-5 animate-bounce text-flipkart-blue" />
-          )}
-          <span>EXPRESS ELEVATOR</span>
+        <div className="px-5 py-3 rounded-2xl flex items-center gap-3.5 bg-white/95 backdrop-blur-md border border-slate-200 text-navy-dark shadow-xl">
+          <div className="flex items-center gap-1.5 text-flipkart-blue font-black text-xs md:text-sm">
+            {isGoingUp ? (
+              <ArrowUp className="w-4 h-4 md:w-5 md:h-5 animate-bounce text-flipkart-blue" />
+            ) : (
+              <ArrowDown className="w-4 h-4 md:w-5 md:h-5 animate-bounce text-flipkart-blue" />
+            )}
+            <span>EXPRESS ELEVATOR</span>
+          </div>
+
+          <div className="w-[1px] h-5 bg-slate-200" />
+
+          <div className="flex items-center gap-2 text-xs md:text-sm">
+            <span className="text-slate-500 font-semibold hidden sm:inline">Destination:</span>
+            <span className="font-extrabold text-navy-dark">
+              {targetFloorObj.name || targetFloorObj.short_title}
+            </span>
+          </div>
+
+          <div className="w-[1px] h-5 bg-slate-200" />
+
+          {/* Digital LED Floor Matrix */}
+          <div className="bg-slate-950 px-2.5 py-0.5 rounded-lg border border-slate-800 text-flipkart-yellow font-black font-mono text-sm md:text-base tracking-widest shadow-inner">
+            {elevatorFloorDisplay}
+          </div>
         </div>
 
-        <div className="w-[1px] h-6 bg-slate-200" />
-
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 font-semibold">Destination:</span>
-          <span className="text-sm font-extrabold text-navy-dark">
-            {targetFloorObj.name || targetFloorObj.short_title}
-          </span>
-        </div>
-
-        <div className="w-[1px] h-6 bg-slate-200" />
-
-        {/* Digital LED Floor Matrix */}
-        <div className="bg-slate-950 px-3 py-1 rounded-lg border border-slate-800 text-flipkart-yellow font-black font-mono text-base tracking-widest shadow-inner">
-          {elevatorFloorDisplay}
-        </div>
+        {/* Skip Ride Button */}
+        <button
+          onClick={skipCinematic}
+          className="pointer-events-auto px-4 py-3 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 text-navy-dark hover:text-flipkart-blue hover:bg-white transition-all font-bold text-xs shadow-xl flex items-center gap-1.5 hover:scale-105"
+          title="Skip elevator transit"
+        >
+          <FastForward className="w-4 h-4 text-flipkart-blue" />
+          <span className="hidden sm:inline">Skip</span>
+        </button>
       </motion.div>
 
-      {/* Center Cinematic Motion Prompt */}
+      {/* Center Motion Status Indicator */}
       {elevatorMoving && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center bg-white/90 backdrop-blur-md px-6 py-3 rounded-2xl border border-blue-200/90 shadow-lg"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/95 backdrop-blur-md border border-blue-200 text-flipkart-blue text-xs font-bold tracking-wider mb-2 shadow-md">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-flipkart-blue text-[11px] font-black tracking-wider mb-1">
             <span className="w-2 h-2 rounded-full bg-flipkart-blue animate-ping" />
-            ASCENDING TO DEPARTMENT
+            {isGoingUp ? 'ASCENDING THROUGH ATRIUM' : 'DESCENDING THROUGH ATRIUM'}
           </div>
-          <p className="text-sm font-bold text-navy-dark">
-            Please hold on while the elevator reaches Floor {targetFloor}
+          <p className="text-xs md:text-sm font-bold text-slate-700">
+            Enjoy the panoramic glass view as you approach {targetFloorObj.short_title}
           </p>
         </motion.div>
       )}
@@ -78,3 +101,5 @@ export function ElevatorHUD() {
     </div>
   );
 }
+
+export default ElevatorHUD;

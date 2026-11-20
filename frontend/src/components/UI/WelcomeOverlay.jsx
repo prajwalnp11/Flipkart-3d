@@ -1,15 +1,34 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useStore } from '../../store/useStore';
-import { ShoppingBag, ArrowRight, Volume2, VolumeX, Sparkles, Building2 } from 'lucide-react';
+import { ShoppingBag, ArrowRight, Volume2, VolumeX, Sparkles, Building2, FastForward } from 'lucide-react';
 
 export function WelcomeOverlay() {
   const currentView = useStore((state) => state.currentView);
+  const phase = useStore((state) => state.phase);
   const enterStore = useStore((state) => state.enterStore);
+  const skipCinematic = useStore((state) => state.skipCinematic);
   const audioMuted = useStore((state) => state.audioMuted);
   const toggleMute = useStore((state) => state.toggleMute);
 
-  if (currentView !== 'EXTERIOR') return null;
+  // During cinematic entering sequence, render visible Skip button (UX Principle #2)
+  if (currentView === 'ENTERING' || phase === 'entering') {
+    return (
+      <div className="absolute top-6 right-6 z-50 pointer-events-auto">
+        <motion.button
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          onClick={skipCinematic}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200 text-navy-dark hover:text-flipkart-blue hover:bg-white transition-all font-bold text-xs shadow-lg hover:scale-105"
+        >
+          <FastForward className="w-4 h-4 text-flipkart-blue" />
+          <span>Skip Cinematic</span>
+        </motion.button>
+      </div>
+    );
+  }
+
+  if (currentView !== 'EXTERIOR' && phase !== 'exterior') return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none flex flex-col justify-between p-6 md:p-12 z-40 bg-gradient-to-t from-white/85 via-white/10 to-white/60">
@@ -91,7 +110,7 @@ export function WelcomeOverlay() {
       {/* Bottom Disclaimer & Controls */}
       <div className="flex flex-col md:flex-row items-center justify-between text-center md:text-left gap-2 text-xs text-slate-500 border-t border-slate-300/60 pt-4 pointer-events-auto">
         <p className="text-[11px] text-slate-500 font-medium">
-          Independent 3D Portfolio Concept. Not an official product of or affiliated with Flipkart.
+          Independent concept project. Not affiliated with Flipkart.
         </p>
         <div className="flex items-center gap-4 text-slate-500 font-medium">
           <span>WebGL Powered</span>
@@ -104,3 +123,5 @@ export function WelcomeOverlay() {
     </div>
   );
 }
+
+export default WelcomeOverlay;

@@ -1,0 +1,497 @@
+import { create } from 'zustand';
+import { api } from '../services/api';
+import { sounds } from '../services/soundEffects';
+import { DEFAULT_FLOORS, DEFAULT_CATEGORIES, DEFAULT_PRODUCTS } from './initialMallData';
+
+// App State Machine Phases:
+// loading -> exterior -> entering -> lobby -> toElevator -> riding -> arriving -> showroom -> inspecting
+export const useExperienceStore = create((set, get) => ({
+  // Core State Machine
+  phase: 'exterior', // 'loading' | 'exterior' | 'entering' | 'lobby' | 'toElevator' | 'riding' | 'arriving' | 'showroom' | 'inspecting'
+  previousPhase: 'exterior',
+  currentView: 'EXTERIOR', // legacy compatibility mirror
+  previousView: 'EXTERIOR',
+  currentFloor: 0,
+  selectedFloor: 0, // legacy compatibility mirror
+  targetFloor: 0,
+  selectedCategory: null,
+  selectedProduct: null,
+  selectedVariant: null,
+  inspectionColor: null,
+  activeHotspot: null,
+  quality: 'high', // 'high' | 'medium' | 'low'
+  isMuted: false,
+  audioMuted: false, // legacy compatibility mirror
+  isClassicView: false,
+  is2DFallback: false, // legacy compatibility mirror
+  cameraLock: false,
+  cinematicProgress: 0, // 0 to 1
+
+  // Door and mechanical indicators
+  doorOpen: false,
+  elevatorDoorOpen: false,
+  elevatorMoving: false,
+  elevatorFloorDisplay: 'G',
+
+  // Active Data
+  floors: DEFAULT_FLOORS,
+  categories: DEFAULT_CATEGORIES,
+  products: DEFAULT_PRODUCTS,
+  cart: { items: [], total_items: 0, subtotal: 0, discount: 0, delivery_fee: 0, total_amount: 0 },
+  wishlist: [],
+  searchResults: [],
+  toasts: [], // { id, title, message, type: 'info' | 'success' | 'warn' }
+
+  // Modals & Panels
+  cartOpen: false,
+  checkoutOpen: false,
+  orderSuccessOpen: false,
+  lastOrder: null,
+  searchOpen: false,
+  searchQuery: '',
+  quickNavOpen: false,
+  user: null,
+
+  // Toast notification helper
+  addToast: (title, message, type = 'info') => {
+    const id = Date.now() + Math.random().toString(36).substr(2, 5);
+    set((state) => ({
+      toasts: [...state.toasts, { id, title, message, type }]
+    }));
+    setTimeout(() => {
+      set((state) => ({
+        toasts: state.toasts.filter((t) => t.id !== id)
+      }));
+    }, 3500);
+  },
+
+  removeToast: (id) => {
+    set((state) => ({
+      toasts: state.toasts.filter((t) => t.id !== id)
+    }));
+  },
+
+  // Initialize data from Django API with fallback preservation
+  initData: async () => {
+    try {
+      const [floors, categories, products, cart] = await Promise.all([
+        api.getFloors(),
+        api.getCategories(),
+        api.getProducts(),
+        api.getCart()
+      ]);
+      set({
+        floors: Array.isArray(floors) && floors.length > 0 ? floors : DEFAULT_FLOORS,
+        categories: Array.isArray(categories) && categories.length > 0 ? categories : DEFAULT_CATEGORIES,
+        products: Array.isArray(products) && products.length > 0 ? products : DEFAULT_PRODUCTS,
+        cart: cart && cart.items ? cart : get().cart
+      });
+    } catch (err) {
+      console.warn('Init data using cached defaults:', err);
+    }
+  },
+
+  // Quality Preset Setter
+  setQuality: (quality) => set({ quality }),
+
+  // Audio mute toggle
+  toggleMute: () => {
+    const next = !get().isMuted;
+    sounds.setMuted(next);
+    set({ isMuted: next, audioMuted: next });
+  },
+
+  // 2D Classic View Toggle
+  toggleClassicView: () => {
+    const next = !get().isClassicView;
+    set({ isClassicView: next, is2DFallback: next });
+  },
+  toggle2DFallback: () => {
+    get().toggleClassicView();
+  },
+
+  // Set Camera Lock
+  setCameraLock: (locked) => set({ cameraLock: locked }),
+
+  // 1. ENTER STORE Cinematic Timeline
+  enterStore: () => {
+    sounds.playClick();
+    sounds.startMallAmbient();
+    sounds.playDoorOpen();
+
+    set({
+      phase: 'entering',
+      currentView: 'ENTERING',
+      cameraLock: true,
+      doorOpen: true
+    });
+
+    // Camera dollys through entrance doors into the Grand Lobby
+    const timer = setTimeout(() => {
+      set({
+        phase: 'lobby',
+        currentView: 'GROUND_LOBBY',
+        currentFloor: 0,
+        selectedFloor: 0,
+        targetFloor: 0,
+        cameraLock: false,
+        doorOpen: false,
+        elevatorFloorDisplay: 'G'
+      });
+      sounds.playElevatorDing();
+    }, 1600);
+
+    get()._currentCinematicTimer = timer;
+  },
+
+  // Return to Mall Plaza Exterior
+  exitToExterior: () => {
+    sounds.playClick();
+    set({
+      phase: 'exterior',
+      currentView: 'EXTERIOR',
+      currentFloor: 0,
+      selectedFloor: 0,
+      targetFloor: 0,
+      selectedCategory: null,
+      selectedProduct: null,
+      cameraLock: false,
+      doorOpen: false,
+      activeHotspot: null
+    });
+  },
+
+  // 2. Select Category (Triggers Elevator Ride to Category's Floor)
+  selectCategory: (category) => {
+    sounds.playClick();
+    sounds.playPortalWhoosh();
+    set({ selectedCategory: category });
+
+    const destFloor = category.floor_number !== undefined ? category.floor_number : (category.floor || 1);
+    get().travelToFloor(destFloor);
+  },
+
+  // 3. Complete Glass Elevator Master Sequence
+  travelToFloor: (destinationFloor) => {
+    const currentFloor = get().currentFloor;
+    if (destinationFloor === currentFloor && get().phase === 'showroom') {
+      return;
+    }
+
+    if (get()._currentCinematicTimer) {
+      clearTimeout(get()._currentCinematicTimer);
+    }
+
+    sounds.playClick();
+    set({
+      targetFloor: destinationFloor,
+      phase: 'toElevator',
+      currentView: 'TRANSITION_ELEVATOR',
+      cameraLock: true,
+      activeHotspot: null,
+      elevatorDoorOpen: false,
+      elevatorMoving: false
+    });
+
+    // Step A: Walk to elevator doors and slide doors open
+    setTimeout(() => {
+      sounds.playDoorOpen();
+      set({ elevatorDoorOpen: true });
+    }, 700);
+
+    // Step B: Enter cabin & close doors
+    setTimeout(() => {
+      set({
+        phase: 'riding',
+        currentView: 'IN_ELEVATOR',
+        elevatorDoorOpen: false,
+        elevatorMoving: true
+      });
+    }, 1500);
+
+    // Step C: Physical ascent/descent through atrium & digital indicator update
+    setTimeout(() => {
+      const displayMap = { 0: 'G', 1: '1F', 2: '2F', 3: '3F' };
+      set({ elevatorFloorDisplay: displayMap[destinationFloor] || `${destinationFloor}F` });
+    }, 2800);
+
+    // Step D: Arrive at destination floor, ding chime & open doors
+    setTimeout(() => {
+      sounds.playElevatorDing();
+      set({
+        phase: 'arriving',
+        currentView: 'IN_ELEVATOR',
+        elevatorMoving: false,
+        elevatorDoorOpen: true,
+        currentFloor: destinationFloor,
+        selectedFloor: destinationFloor
+      });
+    }, 4200);
+
+    // Step E: Exit into Showroom or Ground Lobby
+    const endTimer = setTimeout(() => {
+      set({
+        phase: destinationFloor === 0 ? 'lobby' : 'showroom',
+        currentView: destinationFloor === 0 ? 'GROUND_LOBBY' : 'SHOWROOM',
+        elevatorDoorOpen: false,
+        cameraLock: false
+      });
+    }, 5400);
+
+    get()._currentCinematicTimer = endTimer;
+  },
+
+  // Quick Skip active cinematic transition (UX Principle #2)
+  skipCinematic: () => {
+    if (get()._currentCinematicTimer) {
+      clearTimeout(get()._currentCinematicTimer);
+    }
+
+    const { phase, targetFloor } = get();
+
+    if (phase === 'entering') {
+      set({
+        phase: 'lobby',
+        currentView: 'GROUND_LOBBY',
+        currentFloor: 0,
+        selectedFloor: 0,
+        targetFloor: 0,
+        doorOpen: false,
+        cameraLock: false,
+        elevatorFloorDisplay: 'G'
+      });
+    } else if (phase === 'toElevator' || phase === 'riding' || phase === 'arriving') {
+      const displayMap = { 0: 'G', 1: '1F', 2: '2F', 3: '3F' };
+      set({
+        phase: targetFloor === 0 ? 'lobby' : 'showroom',
+        currentView: targetFloor === 0 ? 'GROUND_LOBBY' : 'SHOWROOM',
+        currentFloor: targetFloor,
+        selectedFloor: targetFloor,
+        elevatorMoving: false,
+        elevatorDoorOpen: false,
+        cameraLock: false,
+        elevatorFloorDisplay: displayMap[targetFloor] || `${targetFloor}F`
+      });
+      sounds.playElevatorDing();
+    }
+  },
+
+  // Quick Jump from Floor HUD
+  quickJumpToFloor: (floorNum) => {
+    get().travelToFloor(floorNum);
+  },
+
+  // 4. Open 3D Product Inspector (Phase: inspecting)
+  openProductInspect: async (product) => {
+    sounds.playClick();
+    sounds.playHotspotPing();
+
+    set({
+      selectedProduct: product,
+      previousPhase: get().phase,
+      previousView: get().currentView,
+      phase: 'inspecting',
+      currentView: 'PRODUCT_INSPECT',
+      cameraLock: false,
+      activeHotspot: null
+    });
+
+    try {
+      const detail = await api.getProductDetail(product.slug);
+      if (detail) {
+        set({
+          selectedProduct: detail,
+          selectedVariant: detail.variants?.[0] || null,
+          inspectionColor: detail.model_3d?.color_options?.[0]?.hex || null
+        });
+      }
+    } catch (err) {
+      console.warn('Using offline product details:', err);
+    }
+  },
+
+  closeProductInspect: () => {
+    sounds.playClick();
+    const prevPhase = get().previousPhase === 'lobby' ? 'lobby' : 'showroom';
+    set({
+      phase: prevPhase,
+      currentView: prevPhase === 'lobby' ? 'GROUND_LOBBY' : 'SHOWROOM',
+      selectedProduct: null,
+      activeHotspot: null
+    });
+  },
+
+  setInspectionColor: (hex) => set({ inspectionColor: hex }),
+  setSelectedVariant: (variant) => set({ selectedVariant: variant }),
+  setActiveHotspot: (hotspot) => {
+    if (hotspot) sounds.playHotspotPing();
+    set({ activeHotspot: hotspot });
+  },
+
+  // 5. Cart Actions
+  addToCart: async (product, variant = null, quantity = 1) => {
+    sounds.playCartAdd();
+    try {
+      const cart = await api.addToCart(product.id, variant?.id || null, quantity);
+      if (cart && cart.items) {
+        set({ cart });
+      } else {
+        // Optimistic offline update
+        const existing = get().cart.items.find(
+          (i) => i.product.id === product.id && i.variant?.id === variant?.id
+        );
+        let items = [];
+        if (existing) {
+          items = get().cart.items.map((i) =>
+            i === existing ? { ...i, quantity: i.quantity + quantity } : i
+          );
+        } else {
+          items = [...get().cart.items, { id: Date.now(), product, variant, quantity }];
+        }
+        const total_items = items.reduce((acc, i) => acc + i.quantity, 0);
+        const subtotal = items.reduce((acc, i) => {
+          const price = Number(i.product.price) + (i.variant ? Number(i.variant.price_modifier || 0) : 0);
+          return acc + price * i.quantity;
+        }, 0);
+        set({
+          cart: {
+            items,
+            total_items,
+            subtotal,
+            discount: Math.round(subtotal * 0.1),
+            delivery_fee: 0,
+            total_amount: Math.round(subtotal * 0.9)
+          }
+        });
+      }
+      get().addToast('Added to Cart', `${product.name} is in your shopping cart.`, 'success');
+    } catch (err) {
+      console.error('Cart error:', err);
+      get().addToast('Added to Cart', `${product.name} added.`, 'success');
+    }
+  },
+
+  updateCartQuantity: async (itemId, quantity) => {
+    try {
+      const cart = await api.updateCartItem(itemId, quantity);
+      if (cart && cart.items) set({ cart });
+    } catch (err) {
+      const items = get().cart.items.map((i) => (i.id === itemId ? { ...i, quantity } : i));
+      const total_items = items.reduce((acc, i) => acc + i.quantity, 0);
+      set({ cart: { ...get().cart, items, total_items } });
+    }
+  },
+
+  removeFromCart: async (itemId) => {
+    try {
+      const cart = await api.removeFromCart(itemId);
+      if (cart && cart.items) set({ cart });
+    } catch (err) {
+      const items = get().cart.items.filter((i) => i.id !== itemId);
+      set({ cart: { ...get().cart, items, total_items: items.length } });
+    }
+  },
+  removeCartItem: async (itemId) => {
+    get().removeFromCart(itemId);
+  },
+  clearCart: () => {
+    set({
+      cart: { items: [], total_items: 0, subtotal: 0, discount: 0, delivery_fee: 0, total_amount: 0 }
+    });
+  },
+
+  // 6. Wishlist Actions
+  toggleWishlist: async (product) => {
+    sounds.playClick();
+    const isPresent = get().wishlist.some((p) => p.id === product.id);
+    if (isPresent) {
+      set({ wishlist: get().wishlist.filter((p) => p.id !== product.id) });
+      get().addToast('Removed from Wishlist', product.name, 'info');
+    } else {
+      set({ wishlist: [...get().wishlist, product] });
+      get().addToast('Added to Wishlist', product.name, 'success');
+    }
+  },
+
+  // 7. Modals
+  toggleCart: () => set((state) => ({ cartOpen: !state.cartOpen })),
+  setCheckoutOpen: (open) => set({ checkoutOpen: open }),
+  setOrderSuccessOpen: (open, order = null) => set({ orderSuccessOpen: open, lastOrder: order }),
+  closeOrderSuccess: () => set({ orderSuccessOpen: false, lastOrder: null }),
+  setSearchOpen: (open) => set({ searchOpen: open }),
+  setQuickNavOpen: (open) => set({ quickNavOpen: open }),
+
+  // 8. Search & Teleport System
+  searchProducts: (query) => {
+    set({ searchQuery: query });
+    if (!query || !query.trim()) {
+      set({ searchResults: [] });
+      return;
+    }
+    const q = query.toLowerCase().trim();
+    const results = get().products.filter((p) => {
+      const matchName = p.name?.toLowerCase().includes(q);
+      const matchBrand = p.brand?.toLowerCase().includes(q);
+      const matchCat = p.category?.name?.toLowerCase().includes(q);
+      const matchDesc = p.description?.toLowerCase().includes(q);
+      return matchName || matchBrand || matchCat || matchDesc;
+    });
+    set({ searchResults: results });
+  },
+
+  teleportToProduct: (product) => {
+    sounds.playPortalWhoosh();
+    set({ searchOpen: false });
+    const productFloor = product.floor_number !== undefined ? product.floor_number : (product.floor || 1);
+    
+    // If not already on product's floor, ride elevator there
+    if (get().currentFloor !== productFloor || get().phase !== 'showroom') {
+      get().travelToFloor(productFloor);
+      setTimeout(() => {
+        get().openProductInspect(product);
+      }, 5500);
+    } else {
+      get().openProductInspect(product);
+    }
+  },
+
+  // 9. Checkout Flow
+  processCheckout: async (formData) => {
+    try {
+      const order = await api.checkout(formData);
+      sounds.playOrderSuccess();
+      set({
+        lastOrder: order,
+        checkoutOpen: false,
+        cartOpen: false,
+        orderSuccessOpen: true,
+        cart: { items: [], total_items: 0, subtotal: 0, discount: 0, delivery_fee: 0, total_amount: 0 }
+      });
+      return order;
+    } catch (err) {
+      console.warn('API checkout failed, creating local order confirmation:', err);
+      const mockOrder = {
+        order_number: 'FK3D-' + Math.floor(100000 + Math.random() * 900000),
+        tracking_number: 'FKT-' + Date.now().toString(36).toUpperCase(),
+        full_name: formData.full_name || 'Valued Customer',
+        city: formData.city || 'Bengaluru',
+        payment_method: formData.payment_method || 'UPI',
+        payment_status: 'PAID',
+        total_amount: get().cart.total_amount || 144900
+      };
+      sounds.playOrderSuccess();
+      set({
+        lastOrder: mockOrder,
+        checkoutOpen: false,
+        cartOpen: false,
+        orderSuccessOpen: true,
+        cart: { items: [], total_items: 0, subtotal: 0, discount: 0, delivery_fee: 0, total_amount: 0 }
+      });
+      return mockOrder;
+    }
+  }
+}));
+
+// Export both useExperienceStore and useStore for backwards-compatibility
+export const useStore = useExperienceStore;
+export default useExperienceStore;
