@@ -104,13 +104,191 @@ export const LOBBY_CATEGORIES = [
   }
 ];
 
+// Architectural Potted Palm Tree (Matching Reference Video 1 & Video 2)
+function PottedPalmTree({ position = [0, 0, 0], scale = 1.0 }) {
+  return (
+    <group position={position} scale={scale}>
+      {/* Modern Fluted White Ceramic Planter Pot */}
+      <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.42, 0.32, 0.9, 24]} />
+        <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
+      </mesh>
+      {/* Blue Planter Accent Ring */}
+      <mesh position={[0, 0.88, 0]}>
+        <torusGeometry args={[0.42, 0.02, 12, 24]} rotation={[Math.PI / 2, 0, 0]} />
+        <meshBasicMaterial color="#2874F0" />
+      </mesh>
+      {/* Dark Soil */}
+      <mesh position={[0, 0.87, 0]}>
+        <cylinderGeometry args={[0.39, 0.39, 0.05, 24]} />
+        <meshStandardMaterial color="#1C1917" roughness={0.9} />
+      </mesh>
+      {/* Palm Trunk */}
+      <mesh position={[0, 1.8, 0]} castShadow>
+        <cylinderGeometry args={[0.075, 0.12, 1.8, 12]} />
+        <meshStandardMaterial color="#78350F" roughness={0.8} />
+      </mesh>
+      {/* Segmented Ring Trims on Trunk */}
+      {[1.15, 1.4, 1.65, 1.9, 2.15, 2.4].map((y, i) => (
+        <mesh key={i} position={[0, y, 0]}>
+          <torusGeometry args={[0.09, 0.018, 8, 16]} rotation={[Math.PI / 2, 0, 0]} />
+          <meshStandardMaterial color="#572205" roughness={0.9} />
+        </mesh>
+      ))}
+      {/* Cascading Tropical Palm Fronds radiating in 8 directions */}
+      {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => {
+        const rad = (angle * Math.PI) / 180;
+        return (
+          <group key={i} position={[0, 2.65, 0]} rotation={[0.45, rad, 0]}>
+            <mesh position={[0, 0, 0.75]} rotation={[-0.3, 0, 0]}>
+              <boxGeometry args={[0.24, 0.02, 1.4]} />
+              <meshStandardMaterial color="#15803D" roughness={0.4} />
+            </mesh>
+            <mesh position={[0, -0.22, 1.55]} rotation={[-0.6, 0, 0]}>
+              <boxGeometry args={[0.2, 0.02, 0.8]} />
+              <meshStandardMaterial color="#16A34A" roughness={0.4} />
+            </mesh>
+          </group>
+        );
+      })}
+    </group>
+  );
+}
+
+// Standing Interactive Ground Floor Directory Kiosk (Matching Reference Video 1 Frame 02 & Frame 03)
+function DirectoryKiosk({ position = [-2.6, 0, 7.2], onSelectFloor }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <group
+      position={position}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+        document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={() => {
+        setHovered(false);
+        document.body.style.cursor = 'auto';
+      }}
+    >
+      {/* Weighted Base Plinth */}
+      <mesh position={[0, 0.06, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.92, 0.12, 0.45]} />
+        <meshStandardMaterial color="#0F172A" metalness={0.85} roughness={0.2} />
+      </mesh>
+      {/* Upright Totem Body */}
+      <mesh position={[0, 1.35, 0]} castShadow>
+        <boxGeometry args={[0.84, 2.45, 0.14]} />
+        <meshStandardMaterial color="#020617" metalness={0.9} roughness={0.15} />
+      </mesh>
+      {/* Glossy Front Glass Bezel */}
+      <mesh position={[0, 1.45, 0.075]}>
+        <planeGeometry args={[0.76, 1.95]} />
+        <meshStandardMaterial color="#090D16" roughness={0.1} metalness={0.9} />
+      </mesh>
+      {/* Ambient Illuminated Touchscreen Display */}
+      <mesh position={[0, 1.45, 0.078]}>
+        <planeGeometry args={[0.72, 1.88]} />
+        <meshBasicMaterial color="#0A1E3F" />
+      </mesh>
+
+      {/* Screen Title: GROUND FLOOR DIRECTORY (Matching Video 1 Frame 03) */}
+      <Text
+        position={[0, 2.22, 0.082]}
+        fontSize={0.048}
+        color="#38BDF8"
+        anchorX="center"
+        anchorY="middle"
+        fontWeight={900}
+      >
+        GROUND FLOOR DIRECTORY
+      </Text>
+      <mesh position={[0, 2.14, 0.082]}>
+        <planeGeometry args={[0.62, 0.005]} />
+        <meshBasicMaterial color="#0284C7" />
+      </mesh>
+
+      {/* Interactive Department Rows */}
+      {[
+        { label: 'FASHION & APPAREL', floor: 2, y: 1.95, badge: '2F' },
+        { label: 'ELECTRONICS & GADGETS', floor: 1, y: 1.72, badge: '1F' },
+        { label: 'BEAUTY & COSMETICS', floor: 2, y: 1.49, badge: '2F' },
+        { label: 'HOME & LIVING', floor: 3, y: 1.26, badge: '3F' },
+        { label: 'GROCERY & DINING', floor: 0, y: 1.03, badge: 'G' },
+      ].map((item, idx) => (
+        <group
+          key={idx}
+          position={[0, item.y, 0.082]}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelectFloor(item.floor);
+          }}
+        >
+          {/* Button Row Plate */}
+          <mesh position={[0, 0, 0]}>
+            <planeGeometry args={[0.64, 0.16]} />
+            <meshBasicMaterial color={hovered ? '#1E293B' : '#0B192C'} />
+          </mesh>
+          <Text
+            position={[-0.26, 0, 0.005]}
+            fontSize={0.04}
+            color="#E2E8F0"
+            anchorX="left"
+            anchorY="middle"
+            fontWeight={800}
+          >
+            {item.label}
+          </Text>
+          {/* Floor Badge Indicator */}
+          <mesh position={[0.24, 0, 0.004]}>
+            <planeGeometry args={[0.1, 0.08]} />
+            <meshBasicMaterial color="#2874F0" />
+          </mesh>
+          <Text
+            position={[0.24, 0, 0.006]}
+            fontSize={0.038}
+            color="#FFFFFF"
+            anchorX="center"
+            anchorY="middle"
+            fontWeight={900}
+          >
+            {item.badge}
+          </Text>
+        </group>
+      ))}
+
+      {/* Isometric 3D Mall Schematic Map Section (Bottom) */}
+      <group position={[0, 0.72, 0.082]}>
+        <mesh>
+          <planeGeometry args={[0.64, 0.34]} />
+          <meshBasicMaterial color="#081426" />
+        </mesh>
+        <Text
+          position={[0, 0.11, 0.005]}
+          fontSize={0.032}
+          color="#94A3B8"
+          anchorX="center"
+          anchorY="middle"
+          fontWeight={700}
+        >
+          INTERACTIVE 3D MALL MAP
+        </Text>
+        <mesh position={[0, -0.04, 0.005]} rotation={[0, 0, 0.35]}>
+          <planeGeometry args={[0.26, 0.16]} />
+          <meshBasicMaterial color="#38BDF8" wireframe />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
 // Detailed 3D Category Model Renderer
 function CategoryModel({ type }) {
   switch (type) {
     case 'electronics':
       return (
         <group scale={0.85}>
-          {/* Smartphone */}
           <group position={[-0.22, 0.45, 0]} rotation={[0, 0.25, 0]}>
             <mesh castShadow>
               <boxGeometry args={[0.38, 0.76, 0.04]} />
@@ -120,13 +298,11 @@ function CategoryModel({ type }) {
               <planeGeometry args={[0.35, 0.72]} />
               <meshBasicMaterial color="#2874F0" />
             </mesh>
-            {/* Camera bump */}
             <mesh position={[-0.1, 0.26, -0.024]}>
               <boxGeometry args={[0.14, 0.16, 0.02]} />
               <meshStandardMaterial color="#0F172A" metalness={0.9} />
             </mesh>
           </group>
-          {/* Tablet */}
           <group position={[0.22, 0.5, -0.1]} rotation={[0, -0.2, 0]}>
             <mesh castShadow>
               <boxGeometry args={[0.62, 0.85, 0.03]} />
@@ -143,7 +319,6 @@ function CategoryModel({ type }) {
     case 'appliances':
       return (
         <group scale={0.85} position={[0, 0.55, 0]}>
-          {/* Curved OLED Smart TV */}
           <mesh castShadow>
             <boxGeometry args={[1.2, 0.7, 0.035]} />
             <meshStandardMaterial color="#111827" metalness={0.85} roughness={0.2} />
@@ -152,7 +327,6 @@ function CategoryModel({ type }) {
             <planeGeometry args={[1.15, 0.65]} />
             <meshBasicMaterial color="#0052CC" />
           </mesh>
-          {/* TV Stand Base */}
           <mesh position={[0, -0.42, 0]}>
             <boxGeometry args={[0.45, 0.04, 0.3]} />
             <meshStandardMaterial color="#D1D5DB" metalness={0.9} roughness={0.2} />
@@ -167,7 +341,6 @@ function CategoryModel({ type }) {
     case 'fashion':
       return (
         <group scale={0.85} position={[0, 0.45, 0]}>
-          {/* Mannequin Torso */}
           <mesh castShadow position={[0, 0.25, 0]}>
             <coneGeometry args={[0.32, 0.7, 24]} />
             <meshStandardMaterial color="#EC4899" roughness={0.35} metalness={0.1} />
@@ -176,12 +349,10 @@ function CategoryModel({ type }) {
             <sphereGeometry args={[0.13, 24, 24]} />
             <meshStandardMaterial color="#FCE7F3" roughness={0.3} />
           </mesh>
-          {/* Gold necklace trim */}
           <mesh position={[0, 0.52, 0.08]} rotation={[0.4, 0, 0]}>
             <torusGeometry args={[0.11, 0.015, 12, 24]} />
             <meshStandardMaterial color="#FFE500" metalness={0.95} roughness={0.1} />
           </mesh>
-          {/* Stand */}
           <mesh position={[0, -0.15, 0]}>
             <cylinderGeometry args={[0.03, 0.03, 0.4, 16]} />
             <meshStandardMaterial color="#D1D5DB" metalness={0.9} />
@@ -196,17 +367,14 @@ function CategoryModel({ type }) {
     case 'furniture':
       return (
         <group scale={0.85} position={[0, 0.45, 0]}>
-          {/* Designer Velvet Lounge Armchair */}
           <mesh castShadow position={[0, 0, 0]}>
             <boxGeometry args={[0.72, 0.32, 0.58]} />
             <meshStandardMaterial color="#10B981" roughness={0.5} />
           </mesh>
-          {/* Backrest */}
           <mesh castShadow position={[0, 0.32, -0.22]}>
             <boxGeometry args={[0.72, 0.42, 0.16]} />
             <meshStandardMaterial color="#059669" roughness={0.5} />
           </mesh>
-          {/* Armrests */}
           <mesh castShadow position={[-0.32, 0.15, 0]}>
             <boxGeometry args={[0.12, 0.28, 0.58]} />
             <meshStandardMaterial color="#059669" roughness={0.5} />
@@ -215,7 +383,6 @@ function CategoryModel({ type }) {
             <boxGeometry args={[0.12, 0.28, 0.58]} />
             <meshStandardMaterial color="#059669" roughness={0.5} />
           </mesh>
-          {/* Wooden Tapered Legs */}
           {[[-0.28, -0.25, -0.2], [0.28, -0.25, -0.2], [-0.28, -0.25, 0.2], [0.28, -0.25, 0.2]].map((pos, idx) => (
             <mesh key={idx} position={pos} rotation={[0.1, 0, idx % 2 === 0 ? 0.1 : -0.1]}>
               <cylinderGeometry args={[0.02, 0.035, 0.22, 12]} />
@@ -228,7 +395,6 @@ function CategoryModel({ type }) {
     case 'beauty':
       return (
         <group scale={0.9} position={[0, 0.45, 0]}>
-          {/* Luxury Fragrance Flacon */}
           <mesh castShadow position={[0, 0.05, 0]}>
             <boxGeometry args={[0.34, 0.44, 0.22]} />
             <meshPhysicalMaterial
@@ -240,12 +406,10 @@ function CategoryModel({ type }) {
               clearcoat={1.0}
             />
           </mesh>
-          {/* Gold Spray Atomiser & Cap */}
           <mesh position={[0, 0.34, 0]}>
             <cylinderGeometry args={[0.08, 0.08, 0.16, 20]} />
             <meshStandardMaterial color="#F59E0B" metalness={0.95} roughness={0.1} />
           </mesh>
-          {/* Gold Brand Label */}
           <mesh position={[0, 0.05, 0.115]}>
             <planeGeometry args={[0.22, 0.2]} />
             <meshStandardMaterial color="#FFFBEB" metalness={0.6} roughness={0.3} />
@@ -256,17 +420,14 @@ function CategoryModel({ type }) {
     case 'grocery':
       return (
         <group scale={0.85} position={[0, 0.45, 0]}>
-          {/* Woven Hamper */}
           <mesh castShadow position={[0, 0, 0]}>
             <cylinderGeometry args={[0.38, 0.3, 0.38, 20]} />
             <meshStandardMaterial color="#D97706" roughness={0.75} />
           </mesh>
-          {/* Hamper Rim */}
           <mesh position={[0, 0.19, 0]}>
             <torusGeometry args={[0.38, 0.03, 12, 24]} />
             <meshStandardMaterial color="#B45309" roughness={0.6} />
           </mesh>
-          {/* Gourmet Items */}
           <mesh position={[-0.12, 0.26, 0]}>
             <sphereGeometry args={[0.14, 16, 16]} />
             <meshStandardMaterial color="#EF4444" roughness={0.4} />
@@ -285,19 +446,16 @@ function CategoryModel({ type }) {
     case 'gaming':
       return (
         <group scale={0.9} position={[0, 0.45, 0]} rotation={[0.4, 0, 0]}>
-          {/* Pro Wireless Gaming Controller Body */}
           <mesh castShadow>
             <boxGeometry args={[0.65, 0.38, 0.16]} />
             <meshStandardMaterial color="#1E1B4B" metalness={0.7} roughness={0.25} />
           </mesh>
-          {/* Left & Right Grip Wings */}
           {[-0.26, 0.26].map((x, idx) => (
             <mesh key={idx} position={[x, -0.1, 0.02]} rotation={[0, 0, idx === 0 ? -0.3 : 0.3]}>
               <cylinderGeometry args={[0.08, 0.11, 0.28, 16]} />
               <meshStandardMaterial color="#8B5CF6" roughness={0.4} />
             </mesh>
           ))}
-          {/* Dual Thumbsticks with Blue Glow */}
           {[-0.14, 0.12].map((x, idx) => (
             <group key={idx} position={[x, -0.02, 0.09]}>
               <mesh>
@@ -316,12 +474,10 @@ function CategoryModel({ type }) {
     case 'automotive':
       return (
         <group scale={0.85} position={[0, 0.45, 0]}>
-          {/* Modern Smart Electric Two-Wheeler Cowl */}
           <mesh castShadow position={[0, 0.1, 0]}>
             <boxGeometry args={[0.55, 0.65, 0.35]} />
             <meshStandardMaterial color="#0891B2" metalness={0.8} roughness={0.2} />
           </mesh>
-          {/* Aerodynamic Windshield */}
           <mesh position={[0, 0.45, -0.05]} rotation={[-0.3, 0, 0]}>
             <planeGeometry args={[0.45, 0.32]} />
             <meshPhysicalMaterial
@@ -332,12 +488,10 @@ function CategoryModel({ type }) {
               roughness={0.1}
             />
           </mesh>
-          {/* High-Beam LED Headlight */}
           <mesh position={[0, 0.12, 0.18]}>
             <boxGeometry args={[0.38, 0.12, 0.03]} />
             <meshBasicMaterial color="#E0F2FE" />
           </mesh>
-          {/* Handlebar */}
           <mesh position={[0, 0.38, 0]} rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[0.025, 0.025, 0.82, 16]} />
             <meshStandardMaterial color="#1E293B" metalness={0.9} />
@@ -414,13 +568,11 @@ function CategoryPavilion({ category, onSelect }) {
 
       {/* 3. Luxury Signboard & Floor Navigation Placard */}
       <group position={[0, 1.65, 0]}>
-        {/* White Glass Card */}
         <mesh castShadow>
           <boxGeometry args={[2.5, 0.88, 0.06]} />
           <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
         </mesh>
 
-        {/* Top Header Color Ribbon */}
         <mesh position={[0, 0.41, 0.032]}>
           <boxGeometry args={[2.5, 0.06, 0.02]} />
           <meshBasicMaterial color={category.color} />
@@ -490,8 +642,40 @@ function CategoryPavilion({ category, onSelect }) {
   );
 }
 
+// Glowing Holographic Centerpiece (Matching Reference Video 2 Frame 03)
+function HologramCenterpiece() {
+  const holoRef = useRef();
+
+  useFrame((state, delta) => {
+    if (holoRef.current) {
+      holoRef.current.rotation.y += delta * 0.8;
+    }
+  });
+
+  return (
+    <group ref={holoRef} position={[0, 1.85, 0]}>
+      {/* Floating Holographic Ring */}
+      <mesh rotation={[Math.PI / 3, 0, 0]}>
+        <torusGeometry args={[0.55, 0.03, 12, 32]} />
+        <meshBasicMaterial color="#38BDF8" transparent opacity={0.8} />
+      </mesh>
+      {/* Second Counter-Rotating Ring */}
+      <mesh rotation={[-Math.PI / 3, 0, 0]}>
+        <torusGeometry args={[0.42, 0.025, 12, 32]} />
+        <meshBasicMaterial color="#0284C7" transparent opacity={0.7} />
+      </mesh>
+      {/* Inner Glowing Crystal Core */}
+      <mesh>
+        <octahedronGeometry args={[0.22, 0]} />
+        <meshBasicMaterial color="#FFE500" />
+      </mesh>
+    </group>
+  );
+}
+
 export function GroundLobby() {
   const selectCategory = useStore((state) => state.selectCategory);
+  const travelToFloor = useStore((state) => state.travelToFloor);
 
   return (
     <group position={[0, 0, 0]}>
@@ -506,6 +690,16 @@ export function GroundLobby() {
         />
       </mesh>
 
+      {/* Dark Marble Center Aisle Inlay (Matching Reference Video 2 Frame 03) */}
+      <mesh position={[0, -0.045, 2.0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[4.2, 16]} />
+        <meshStandardMaterial
+          color="#1E293B"
+          roughness={0.15}
+          metalness={0.4}
+        />
+      </mesh>
+
       {/* Decorative Floor Inlay Rings in Lobby Center */}
       <mesh position={[0, 0.01, 2.0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[6.4, 6.65, 64]} />
@@ -516,7 +710,16 @@ export function GroundLobby() {
         <meshBasicMaterial color="#CBD5E1" />
       </mesh>
 
-      {/* ================= 2. CENTRAL ATRIUM CONCIERGE & DIRECTORY DESK ================= */}
+      {/* ================= 2. POTTED PALM TREES (Matching Reference Video 1 & Video 2) ================= */}
+      <PottedPalmTree position={[-3.6, 0, 8.2]} scale={1.1} />
+      <PottedPalmTree position={[3.6, 0, 8.2]} scale={1.1} />
+      <PottedPalmTree position={[-5.4, 0, 3.8]} scale={1.15} />
+      <PottedPalmTree position={[5.4, 0, 3.8]} scale={1.15} />
+
+      {/* ================= 3. STANDING DIRECTORY KIOSK (Matching Reference Video 1 Frame 03) ================= */}
+      <DirectoryKiosk position={[-2.4, 0, 7.0]} onSelectFloor={travelToFloor} />
+
+      {/* ================= 4. CENTRAL ATRIUM CONCIERGE DESK & HOLOGRAPHIC CENTERPIECE ================= */}
       <group position={[0, 0, 2.0]}>
         {/* Curved White Marble Concierge Desk Counter */}
         <mesh position={[0, 0.55, 0]} castShadow receiveShadow>
@@ -533,6 +736,7 @@ export function GroundLobby() {
           <cylinderGeometry args={[1.82, 1.82, 0.08, 32, 1, false, 0, Math.PI]} />
           <meshBasicMaterial color="#FFE500" />
         </mesh>
+
         <Text
           position={[0, 0.62, 1.82]}
           fontSize={0.2}
@@ -553,9 +757,12 @@ export function GroundLobby() {
         >
           SELECT ANY DEPARTMENT TO TAKE THE GLASS ELEVATOR
         </Text>
+
+        {/* Holographic Glowing Centerpiece */}
+        <HologramCenterpiece />
       </group>
 
-      {/* ================= 3. RENDER 8 DETAILED CATEGORY PAVILIONS ================= */}
+      {/* ================= 5. RENDER 8 DETAILED CATEGORY PAVILIONS ================= */}
       {LOBBY_CATEGORIES.map((cat) => (
         <CategoryPavilion
           key={cat.id}
@@ -566,3 +773,5 @@ export function GroundLobby() {
     </group>
   );
 }
+
+export default GroundLobby;

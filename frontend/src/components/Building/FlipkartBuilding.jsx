@@ -154,7 +154,7 @@ export function FlipkartBuilding() {
         />
       ))}
 
-      {/* ================= GRAND ENTRANCE CANOPY ================= */}
+      {/* ================= GRAND ENTRANCE CANOPY & NEON PORTAL ================= */}
       {/* Floating Modern White Canopy Roof */}
       <mesh position={[0, 3.4, 0.8]} castShadow>
         <boxGeometry args={[8.5, 0.35, 4.5]} />
@@ -169,6 +169,32 @@ export function FlipkartBuilding() {
           emissiveIntensity={0.9}
         />
       </mesh>
+
+      {/* Futuristic Glowing Neon Cyan FLIPKART Canopy Sign (Matching Reference Video 2 Frame 01) */}
+      <group position={[0, 4.25, 1.2]}>
+        {/* Dark Modern Shield Backing */}
+        <mesh>
+          <boxGeometry args={[4.6, 1.05, 0.12]} />
+          <meshStandardMaterial color="#0B192C" metalness={0.9} roughness={0.15} />
+        </mesh>
+        {/* Cyan Glowing Outer Trim */}
+        <mesh position={[0, 0, 0.065]}>
+          <boxGeometry args={[4.52, 0.98, 0.02]} />
+          <meshBasicMaterial color="#38BDF8" wireframe />
+        </mesh>
+        {/* Vivid Neon Cyan 3D Text */}
+        <Text
+          position={[0, 0, 0.08]}
+          fontSize={0.52}
+          color="#38BDF8"
+          anchorX="center"
+          anchorY="middle"
+          fontWeight={900}
+          letterSpacing={0.14}
+        >
+          FLIPKART
+        </Text>
+      </group>
 
       {/* Two Cylindrical Architectural Support Columns in Flipkart Blue */}
       {[-3.8, 3.8].map((x, idx) => (

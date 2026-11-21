@@ -21,18 +21,28 @@ export function GlassElevator({ position = [0, 0, -7.0] }) {
   const targetY = floorYMap[targetFloor] !== undefined ? floorYMap[targetFloor] : 0;
   const currentY = floorYMap[selectedFloor] !== undefined ? floorYMap[selectedFloor] : 0;
 
+  // Floor title mappings (Matching Reference Video 2 Frame 07 & 08)
+  const floorTitleMap = {
+    0: 'GROUND FLOOR - GRAND ATRIUM',
+    1: 'FLOOR 1 - MOBILE WORLD',
+    2: 'FLOOR 2 - FASHION WORLD',
+    3: 'FLOOR 3 - HOME & LIVING'
+  };
+  const activeFloorNum = elevatorMoving ? targetFloor : selectedFloor;
+  const dirArrow = elevatorMoving ? (targetFloor >= selectedFloor ? '▲' : '▼') : '•';
+  const statusCheck = elevatorMoving ? '...' : '✔';
+  const dynamicElevatorText = `${dirArrow} ${floorTitleMap[activeFloorNum] || `FLOOR ${activeFloorNum}`} [${statusCheck}]`;
+
   useFrame((_, delta) => {
     // 1. Physical Vertical Smooth Transit
     if (cabGroupRef.current) {
       if (elevatorMoving) {
-        // Smoothly interpolate towards target floor Y
         cabGroupRef.current.position.y = THREE.MathUtils.lerp(
           cabGroupRef.current.position.y,
           targetY,
           1.8 * delta
         );
       } else {
-        // Locked at destination floor Y
         cabGroupRef.current.position.y = THREE.MathUtils.lerp(
           cabGroupRef.current.position.y,
           currentY,
@@ -63,7 +73,6 @@ export function GlassElevator({ position = [0, 0, -7.0] }) {
     <group ref={cabGroupRef} position={[position[0], currentY, position[2]]}>
       {/* ================= PANORAMIC GLASS CAB ================= */}
       {/* 1. Floor & Ceiling Base (Brushed Silver Metal & Stainless Steel) */}
-      {/* Floor Slab */}
       <mesh position={[0, 0.05, 0]} receiveShadow>
         <boxGeometry args={[3.2, 0.1, 2.6]} />
         <meshStandardMaterial
@@ -154,7 +163,6 @@ export function GlassElevator({ position = [0, 0, -7.0] }) {
       </mesh>
 
       {/* 4. Sliding Front Double Doors (Brushed Silver Metallic + Vertical Chrome Handles) */}
-      {/* Door Frame Top Header */}
       <mesh position={[0, 3.15, 1.25]}>
         <boxGeometry args={[3.1, 0.5, 0.08]} />
         <meshStandardMaterial color="#FFFFFF" roughness={0.2} metalness={0.3} />
@@ -171,7 +179,6 @@ export function GlassElevator({ position = [0, 0, -7.0] }) {
             envMapIntensity={1.3}
           />
         </mesh>
-        {/* Full-Height Vertical Chrome Handle */}
         <mesh position={[0.32, 0, 0.045]}>
           <cylinderGeometry args={[0.016, 0.016, 1.8, 16]} />
           <meshStandardMaterial color="#F8FAFC" metalness={0.98} roughness={0.05} />
@@ -189,41 +196,43 @@ export function GlassElevator({ position = [0, 0, -7.0] }) {
             envMapIntensity={1.3}
           />
         </mesh>
-        {/* Full-Height Vertical Chrome Handle */}
         <mesh position={[-0.32, 0, 0.045]}>
           <cylinderGeometry args={[0.016, 0.016, 1.8, 16]} />
           <meshStandardMaterial color="#F8FAFC" metalness={0.98} roughness={0.05} />
         </mesh>
       </group>
 
-      {/* 5. Glowing Digital LED Floor Matrix Indicator (Above Door Header) */}
-      <group position={[0, 3.15, 1.3]}>
-        {/* Dark Bezel Screen */}
+      {/* 5. Glowing Digital LED Matrix Sign (Matching Reference Video 2 Frame 07 & 08) */}
+      <group position={[0, 3.18, 1.3]}>
+        {/* Dark Screen Bezel with Chrome Border */}
         <mesh>
-          <boxGeometry args={[1.1, 0.32, 0.02]} />
-          <meshStandardMaterial color="#0A1E3F" roughness={0.2} metalness={0.8} />
+          <boxGeometry args={[2.5, 0.36, 0.04]} />
+          <meshStandardMaterial color="#022C22" roughness={0.2} metalness={0.9} />
         </mesh>
-        {/* Blue/Yellow Matrix LED Text Display */}
+        <mesh position={[0, 0, -0.01]}>
+          <boxGeometry args={[2.54, 0.4, 0.03]} />
+          <meshStandardMaterial color="#E2E8F0" metalness={0.95} roughness={0.1} />
+        </mesh>
+        {/* Vivid Green LED Matrix Display Text */}
         <Text
-          position={[0, 0, 0.015]}
-          fontSize={0.2}
-          color="#FFE500"
+          position={[0, 0, 0.025]}
+          fontSize={0.1}
+          color="#4ADE80"
           anchorX="center"
           anchorY="middle"
           fontWeight={900}
+          letterSpacing={0.05}
         >
-          {elevatorFloorDisplay}
+          {dynamicElevatorText}
         </Text>
       </group>
 
       {/* 6. Tactile Blue Illuminated In-Cab Floor Selection Buttons */}
       <group position={[1.45, 1.6, 0.6]}>
-        {/* Wall Panel Plate */}
         <mesh position={[0, 0, 0]}>
           <boxGeometry args={[0.03, 0.9, 0.28]} />
           <meshStandardMaterial color="#1E293B" metalness={0.8} roughness={0.2} />
         </mesh>
-        {/* Floor Buttons (3, 2, 1, G) */}
         {[
           { label: '3F', floor: 3, y: 0.3 },
           { label: '2F', floor: 2, y: 0.1 },
@@ -265,12 +274,26 @@ export function GlassElevator({ position = [0, 0, -7.0] }) {
         })}
       </group>
 
-      {/* 7. Bright Interior Downlight Spotlighting Inside the Cab */}
-      <pointLight position={[0, 3.2, 0]} intensity={2.8} distance={7} color="#FFFFFF" />
-      <mesh position={[0, 3.39, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.3, 24]} />
-        <meshBasicMaterial color="#FFFFFF" />
-      </mesh>
+      {/* 7. Warm Recessed Downlights on Cab Ceiling */}
+      <group position={[0, 3.42, 0]}>
+        {[-0.65, 0.65].map((x, i) =>
+          [-0.55, 0.55].map((z, j) => (
+            <group key={`${i}-${j}`} position={[x, 0, z]}>
+              <mesh rotation={[Math.PI / 2, 0, 0]}>
+                <ringGeometry args={[0.08, 0.14, 16]} />
+                <meshStandardMaterial color="#E2E8F0" metalness={0.9} />
+              </mesh>
+              <mesh position={[0, 0.01, 0]}>
+                <circleGeometry args={[0.08, 16]} />
+                <meshBasicMaterial color="#FEF08A" />
+              </mesh>
+            </group>
+          ))
+        )}
+        <pointLight position={[0, -0.4, 0]} intensity={1.5} distance={5.5} color="#FFFBEB" />
+      </group>
     </group>
   );
 }
+
+export default GlassElevator;
