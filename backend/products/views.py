@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
 from .models import Product, ProductReview
+from .flipkart_service import search_flipkart_live, import_flipkart_product_to_mall, RAPIDAPI_KEY
 from .serializers import (
     ProductListSerializer,
     ProductDetailSerializer,
@@ -40,6 +41,31 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
                 Q(description__icontains=search_query)
             )
         return qs
+
+    @action(detail=False, methods=['get'], url_path='flipkart-search')
+    def flipkart_search(self, request):
+        """Live search real Flipkart products via RapidAPI (with intelligent catalog fallback)."""
+        q = request.query_params.get('q', '')
+        results = search_flipkart_live(q)
+        return Response({
+            "query": q,
+            "count": len(results),
+            "has_api_key": bool(RAPIDAPI_KEY),
+            "results": results
+        })
+
+    @action(detail=False, methods=['post'], url_path='flipkart-import')
+    def flipkart_import(self, request):
+        """Import a real Flipkart product and bind it into the 3D mall floor."""
+        product_data = request.data
+        if not product_data or not product_data.get('title'):
+            return Response({"error": "Product data with title is required"}, status=status.HTTP_400_BAD_REQUEST)
+        product = import_flipkart_product_to_mall(product_data)
+        serializer = ProductDetailSerializer(product)
+        return Response({
+            "message": f"Successfully imported '{product.name}' into 3D mall!",
+            "product": serializer.data
+        }, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.AllowAny])
     def add_review(self, request, slug=None):

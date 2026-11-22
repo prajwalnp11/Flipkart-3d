@@ -240,6 +240,35 @@ export const api = {
     return data;
   },
 
+  // Live Flipkart RapidAPI Integration
+  async searchFlipkartLive(query) {
+    try {
+      const res = await fetch(`${API_BASE}/products/flipkart-search/?q=${encodeURIComponent(query || '')}`, {
+        headers: getAuthHeaders()
+      });
+      if (!res.ok) throw new Error('Live Flipkart search failed');
+      return await res.json();
+    } catch (err) {
+      console.warn('Live Flipkart search fallback:', err.message);
+      return { query, count: 0, has_api_key: false, results: [] };
+    }
+  },
+
+  async importFlipkartProduct(productData) {
+    try {
+      const res = await fetch(`${API_BASE}/products/flipkart-import/`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(productData)
+      });
+      if (!res.ok) throw new Error('Failed to import product to 3D mall');
+      return await res.json();
+    } catch (err) {
+      console.error('Import Flipkart product error:', err);
+      throw err;
+    }
+  },
+
   logout() {
     localStorage.removeItem('fk3d_token');
   }

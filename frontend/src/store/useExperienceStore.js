@@ -567,6 +567,49 @@ export const useExperienceStore = create((set, get) => ({
   setQuickNavOpen: (open) => set({ quickNavOpen: open }),
 
   // 8. Search & Teleport System
+  flipkartLiveResults: [],
+  flipkartLiveLoading: false,
+  flipkartLiveHasApiKey: false,
+
+  fetchFlipkartLive: async (query) => {
+    set({ flipkartLiveLoading: true });
+    try {
+      const data = await api.searchFlipkartLive(query);
+      set({
+        flipkartLiveResults: data.results || [],
+        flipkartLiveHasApiKey: !!data.has_api_key,
+        flipkartLiveLoading: false
+      });
+    } catch (err) {
+      set({ flipkartLiveLoading: false });
+    }
+  },
+
+  importAndInspectFlipkartProduct: async (productData) => {
+    try {
+      get().addToast('Importing to 3D Mall', `Binding 3D model for ${productData.title}...`, 'info');
+      const resp = await api.importFlipkartProduct(productData);
+      const newProduct = resp.product;
+      
+      // Add to local product list if not present
+      set((state) => ({
+        products: [newProduct, ...state.products.filter((p) => p.slug !== newProduct.slug)],
+        searchOpen: false
+      }));
+
+      get().addToast('3D Model Ready', `${newProduct.name} placed in showroom!`, 'success');
+
+      // Instantly jump to floor and open 3D inspector
+      const floorNum = newProduct.floor_number !== undefined ? newProduct.floor_number : (newProduct.floor?.floor_number ?? 1);
+      get().instantJumpToFloor(floorNum);
+      setTimeout(() => {
+        get().openProductInspect(newProduct);
+      }, 400);
+    } catch (err) {
+      get().addToast('Import Failed', 'Could not import product to 3D mall.', 'warn');
+    }
+  },
+
   searchProducts: (query) => {
     set({ searchQuery: query });
     if (!query || !query.trim()) {
