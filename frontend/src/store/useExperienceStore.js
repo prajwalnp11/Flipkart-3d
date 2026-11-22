@@ -33,6 +33,22 @@ export const useExperienceStore = create((set, get) => ({
   elevatorMoving: false,
   elevatorFloorDisplay: 'G',
 
+  // Customer Avatar & Navigation Mode (Section 4)
+  navigationMode: 'guided', // 'guided' | 'avatar'
+  avatarPosition: [0, 0, 10],
+  avatarRotation: 0,
+  avatarMoving: false,
+  interactionPrompt: null, // { text, action }
+
+  // Brand Storefront State (Section 6)
+  selectedBrand: null, // null | 'apple' | 'samsung' | 'google' | 'oneplus' | 'xiaomi' | 'nothing'
+  brandDoorOpen: false,
+
+  // 3D Exploded Product State (Section 9)
+  isExplodedView: false,
+  explosionProgress: 0, // 0 (assembled) to 1 (fully separated)
+  selectedExplodedComponent: null,
+
   // Active Data
   floors: DEFAULT_FLOORS,
   categories: DEFAULT_CATEGORIES,
@@ -317,7 +333,10 @@ export const useExperienceStore = create((set, get) => ({
       phase: prevPhase,
       currentView: prevPhase === 'lobby' ? 'GROUND_LOBBY' : 'SHOWROOM',
       selectedProduct: null,
-      activeHotspot: null
+      activeHotspot: null,
+      isExplodedView: false,
+      explosionProgress: 0,
+      selectedExplodedComponent: null
     });
   },
 
@@ -326,6 +345,84 @@ export const useExperienceStore = create((set, get) => ({
   setActiveHotspot: (hotspot) => {
     if (hotspot) sounds.playHotspotPing();
     set({ activeHotspot: hotspot });
+  },
+
+  // Avatar and Navigation Mode Actions
+  setNavigationMode: (mode) => {
+    sounds.playClick();
+    set({ navigationMode: mode });
+    get().addToast('Navigation Mode', mode === 'avatar' ? '🎮 Free Avatar Mode (Use WASD / Arrows to walk)' : '🎥 Cinematic Guided Mode');
+  },
+  toggleNavigationMode: () => {
+    const next = get().navigationMode === 'guided' ? 'avatar' : 'guided';
+    get().setNavigationMode(next);
+  },
+  updateAvatarState: (pos, rot, isMoving) => {
+    set({ avatarPosition: pos, avatarRotation: rot, avatarMoving: isMoving });
+  },
+  setInteractionPrompt: (prompt) => {
+    set({ interactionPrompt: prompt });
+  },
+
+  // Brand Boutique Store Actions
+  enterBrandStore: (brandSlug) => {
+    sounds.playDoorOpen();
+    sounds.playPortalWhoosh();
+    set({
+      selectedBrand: brandSlug,
+      brandDoorOpen: true,
+      cameraLock: true
+    });
+    get().addToast('Flagship Storefront', `Entering the official ${brandSlug.toUpperCase()} Showroom`, 'info');
+    setTimeout(() => {
+      set({ brandDoorOpen: false, cameraLock: false });
+    }, 1600);
+  },
+  exitBrandStore: () => {
+    sounds.playDoorOpen();
+    set({
+      brandDoorOpen: true,
+      cameraLock: true
+    });
+    setTimeout(() => {
+      set({
+        selectedBrand: null,
+        brandDoorOpen: false,
+        cameraLock: false
+      });
+      sounds.playClick();
+    }, 1200);
+  },
+
+  // 3D Exploded Product View Actions
+  toggleExplodedView: () => {
+    sounds.playClick();
+    const next = !get().isExplodedView;
+    set({
+      isExplodedView: next,
+      explosionProgress: next ? 1 : 0,
+      selectedExplodedComponent: next ? 'camera' : null
+    });
+    sounds.playHotspotPing();
+  },
+  setExplosionProgress: (progress) => {
+    set({
+      explosionProgress: progress,
+      isExplodedView: progress > 0.02
+    });
+  },
+  setSelectedExplodedComponent: (compKey) => {
+    sounds.playClick();
+    sounds.playHotspotPing();
+    set({ selectedExplodedComponent: compKey });
+  },
+  resetExplodedView: () => {
+    sounds.playClick();
+    set({
+      isExplodedView: false,
+      explosionProgress: 0,
+      selectedExplodedComponent: null
+    });
   },
 
   // 5. Cart Actions

@@ -1236,6 +1236,281 @@ def seed():
                     'comment': 'Stunning craftsmanship. The leather grain is exceptionally supple and the gold hardware is flawless.'
                 }
             ]
+        },
+
+        # Product 15: Samsung Galaxy S24 Ultra
+        {
+            'name': 'Samsung Galaxy S24 Ultra (AI Titanium)',
+            'slug': 'samsung-galaxy-s24-ultra',
+            'brand': 'Samsung',
+            'category': categories['mobiles'],
+            'floor': floors[1],
+            'price': 129999.00,
+            'original_price': 139999.00,
+            'discount_percentage': 7,
+            'rating': 4.9,
+            'review_count': 2450,
+            'stock': 50,
+            'is_featured': True,
+            'showroom_slot': 1,
+            'position_x': -4.5,
+            'position_y': 1.1,
+            'position_z': 0.0,
+            'description': 'Galaxy AI is here. Encased in a satin-finish Titanium shield with integrated S-Pen and revolutionary 200MP Quad Telephoto imaging.',
+            'specifications': {
+                'Display': '6.8-inch Dynamic AMOLED 2X QHD+ 120Hz (2600 nits)',
+                'Processor': 'Snapdragon 8 Gen 3 for Galaxy (4nm)',
+                'Camera': '200MP Main + 50MP 5x Periscope + 10MP 3x + 12MP Ultra-wide',
+                'Battery': '5000 mAh with 45W Fast Charging'
+            },
+            'model_3d': {
+                'model_type': 'smartphone',
+                'scale': 1.0,
+                'camera_distance': 2.4,
+                'auto_rotate_speed': 0.8,
+                'color_options': [
+                    {'name': 'Titanium Grey', 'hex': '#63666A'},
+                    {'name': 'Titanium Black', 'hex': '#1C1D1F'}
+                ]
+            },
+            'variants': [
+                {'variant_type': 'Color', 'name': 'Titanium Grey', 'value': '#63666A', 'price_modifier': 0},
+                {'variant_type': 'Storage', 'name': '256 GB', 'value': '256GB', 'price_modifier': 0}
+            ],
+            'features': [
+                {
+                    'name': 'camera',
+                    'title': '200MP ProVisual AI Sensor Engine',
+                    'description': 'Industry-leading 200MP sensor with AI zoom stabilization.',
+                    'hotspot_position': {'x': -0.32, 'y': 0.58, 'z': 0.12},
+                    'icon': 'Camera',
+                    'badge_text': '200MP AI SENSOR',
+                    'specs': {'Main': '200MP f/1.7 OIS', 'Zoom': '100x Space Zoom'}
+                }
+            ],
+            'reviews': []
+        },
+
+        # Product 16: Samsung Galaxy Z Fold 6
+        {
+            'name': 'Samsung Galaxy Z Fold 6 (Silver Shadow)',
+            'slug': 'samsung-galaxy-z-fold-6',
+            'brand': 'Samsung',
+            'category': categories['mobiles'],
+            'floor': floors[1],
+            'price': 164999.00,
+            'original_price': 174999.00,
+            'discount_percentage': 6,
+            'rating': 4.85,
+            'review_count': 980,
+            'stock': 25,
+            'is_featured': True,
+            'showroom_slot': 2,
+            'position_x': 0.0,
+            'position_y': 1.1,
+            'position_z': 0.0,
+            'description': 'Ultra-slim dual-rail flex hinge opens into a 7.6-inch tablet canvas powered by multi-window Galaxy AI multitasking.',
+            'specifications': {
+                'Main Display': '7.6-inch Dynamic AMOLED 2X Infinity Flex 120Hz',
+                'Processor': 'Snapdragon 8 Gen 3 for Galaxy'
+            },
+            'model_3d': {
+                'model_type': 'smartphone',
+                'scale': 1.0,
+                'camera_distance': 2.4,
+                'auto_rotate_speed': 0.8,
+                'color_options': [{'name': 'Silver Shadow', 'hex': '#D1D5DB'}]
+            },
+            'variants': [
+                {'variant_type': 'Storage', 'name': '256 GB', 'value': '256GB', 'price_modifier': 0}
+            ],
+            'features': [],
+            'reviews': []
+        },
+
+        # Product 17: Google Pixel 9 Pro XL
+        {
+            'name': 'Google Pixel 9 Pro XL (Porcelain)',
+            'slug': 'google-pixel-9-pro-xl',
+            'brand': 'Google',
+            'category': categories['mobiles'],
+            'floor': floors[1],
+            'price': 124999.00,
+            'original_price': 134999.00,
+            'discount_percentage': 7,
+            'rating': 4.9,
+            'review_count': 1420,
+            'stock': 40,
+            'is_featured': True,
+            'showroom_slot': 3,
+            'position_x': 4.5,
+            'position_y': 1.1,
+            'position_z': 0.0,
+            'description': 'Engineered by Google with Gemini Nano built-in. Features the iconic sculpted camera visor, 3000-nit Super Actua display, and Tensor G4 processing.',
+            'specifications': {
+                'Display': '6.8-inch Super Actua LTPO OLED (3000 nits)',
+                'Processor': 'Google Tensor G4'
+            },
+            'model_3d': {
+                'model_type': 'smartphone',
+                'scale': 1.0,
+                'camera_distance': 2.4,
+                'auto_rotate_speed': 0.8,
+                'color_options': [{'name': 'Porcelain White', 'hex': '#F5F5F0'}]
+            },
+            'variants': [
+                {'variant_type': 'Storage', 'name': '256 GB', 'value': '256GB', 'price_modifier': 0}
+            ],
+            'features': [],
+            'reviews': []
+        },
+
+        # Product 18: OnePlus 12 5G
+        {
+            'name': 'OnePlus 12 5G (Flowy Emerald)',
+            'slug': 'oneplus-12-5g',
+            'brand': 'OnePlus',
+            'category': categories['mobiles'],
+            'floor': floors[1],
+            'price': 64999.00,
+            'original_price': 69999.00,
+            'discount_percentage': 7,
+            'rating': 4.8,
+            'review_count': 3100,
+            'stock': 65,
+            'is_featured': True,
+            'showroom_slot': 4,
+            'position_x': -2.5,
+            'position_y': 1.1,
+            'position_z': 0.0,
+            'description': 'Never Settle. 4th Gen Hasselblad Camera System, ultra-fast 100W SUPERVOOC charging, and 5400 mAh high-capacity battery.',
+            'specifications': {
+                'Display': '6.82-inch 2K ProXDR Display (4500 nits)',
+                'Charging': '100W Wired SUPERVOOC + 50W Wireless AIRVOOC'
+            },
+            'model_3d': {
+                'model_type': 'smartphone',
+                'scale': 1.0,
+                'camera_distance': 2.4,
+                'auto_rotate_speed': 0.8,
+                'color_options': [{'name': 'Flowy Emerald', 'hex': '#2E6955'}]
+            },
+            'variants': [
+                {'variant_type': 'Storage', 'name': '256 GB', 'value': '256GB', 'price_modifier': 0}
+            ],
+            'features': [],
+            'reviews': []
+        },
+
+        # Product 19: Xiaomi 14 Ultra
+        {
+            'name': 'Xiaomi 14 Ultra (Leica Quad Camera)',
+            'slug': 'xiaomi-14-ultra',
+            'brand': 'Xiaomi',
+            'category': categories['mobiles'],
+            'floor': floors[1],
+            'price': 99999.00,
+            'original_price': 119999.00,
+            'discount_percentage': 17,
+            'rating': 4.88,
+            'review_count': 820,
+            'stock': 20,
+            'is_featured': True,
+            'showroom_slot': 5,
+            'position_x': 2.5,
+            'position_y': 1.1,
+            'position_z': 0.0,
+            'description': 'Co-engineered with Leica. Flagship 1-inch LYT-900 sensor with stepless f/1.63-f/4.0 variable aperture and nano-tech vegan leather back.',
+            'specifications': {
+                'Optics': 'Leica Summilux Quad 50MP Camera System with 1-inch sensor',
+                'Processor': 'Snapdragon 8 Gen 3'
+            },
+            'model_3d': {
+                'model_type': 'smartphone',
+                'scale': 1.0,
+                'camera_distance': 2.4,
+                'auto_rotate_speed': 0.8,
+                'color_options': [{'name': 'Titanium Black', 'hex': '#212124'}]
+            },
+            'variants': [
+                {'variant_type': 'Color', 'name': 'Titanium Black', 'value': '#212124', 'price_modifier': 0}
+            ],
+            'features': [],
+            'reviews': []
+        },
+
+        # Product 20: Nothing Phone (2)
+        {
+            'name': 'Nothing Phone (2) Dark Grey Glyph',
+            'slug': 'nothing-phone-2',
+            'brand': 'Nothing',
+            'category': categories['mobiles'],
+            'floor': floors[1],
+            'price': 39999.00,
+            'original_price': 49999.00,
+            'discount_percentage': 20,
+            'rating': 4.75,
+            'review_count': 1950,
+            'stock': 75,
+            'is_featured': True,
+            'showroom_slot': 6,
+            'position_x': 0.0,
+            'position_y': 1.1,
+            'position_z': 2.5,
+            'description': 'Iconic transparent back design with programmable LED Glyph Interface, Nothing OS 2.5 dot-matrix UI, and dual 50MP Sony cameras.',
+            'specifications': {
+                'Interface': 'Glyph Interface with 33 addressable LED lighting zones',
+                'Processor': 'Qualcomm Snapdragon 8+ Gen 1'
+            },
+            'model_3d': {
+                'model_type': 'smartphone',
+                'scale': 1.0,
+                'camera_distance': 2.4,
+                'auto_rotate_speed': 0.8,
+                'color_options': [{'name': 'Dark Grey', 'hex': '#373A3C'}]
+            },
+            'variants': [
+                {'variant_type': 'Color', 'name': 'Dark Grey', 'value': '#373A3C', 'price_modifier': 0}
+            ],
+            'features': [],
+            'reviews': []
+        },
+
+        # Product 21: Dior Sauvage Eau de Parfum
+        {
+            'name': 'Dior Sauvage Eau de Parfum (100ml)',
+            'slug': 'dior-sauvage-edp',
+            'brand': 'Dior',
+            'category': categories['beauty'],
+            'floor': floors[2],
+            'price': 12500.00,
+            'original_price': 14000.00,
+            'discount_percentage': 10,
+            'rating': 4.95,
+            'review_count': 4200,
+            'stock': 90,
+            'is_featured': True,
+            'showroom_slot': 7,
+            'position_x': 0.0,
+            'position_y': 1.1,
+            'position_z': 4.5,
+            'description': 'Sensual and mysterious. Calabrian bergamot blends with smoky Papua New Guinean vanilla absolute and radiant ambroxan.',
+            'specifications': {
+                'Fragrance Family': 'Citrus Woody Warm Oriental',
+                'Volume': '100ml / 3.4 fl oz Spray'
+            },
+            'model_3d': {
+                'model_type': 'handbag',
+                'scale': 1.0,
+                'camera_distance': 2.2,
+                'auto_rotate_speed': 0.8,
+                'color_options': [{'name': 'Midnight Deep Blue', 'hex': '#0F172A'}]
+            },
+            'variants': [
+                {'variant_type': 'Size', 'name': '100 ml', 'value': '100ml', 'price_modifier': 0}
+            ],
+            'features': [],
+            'reviews': []
         }
     ]
 

@@ -4,6 +4,7 @@ import { OrbitControls, ContactShadows, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStore } from '../../store/useStore';
 import { SmartphoneModel } from './Models3D/SmartphoneModel';
+import { ExplodedSmartphoneModel } from './Models3D/ExplodedSmartphoneModel';
 import { LaptopModel } from './Models3D/LaptopModel';
 import { HeadphonesModel } from './Models3D/HeadphonesModel';
 import { SmartwatchModel } from './Models3D/SmartwatchModel';
@@ -19,9 +20,63 @@ import { EarbudsModel } from './Models3D/EarbudsModel';
 import { MannequinModel } from './Models3D/MannequinModel';
 import { HandbagModel } from './Models3D/HandbagModel';
 import { ProductHotspots } from './ProductHotspots';
-import { RotateCw, RefreshCw, Compass } from 'lucide-react';
+import { RotateCw, RefreshCw, Compass, Layers, Check, Info, X } from 'lucide-react';
 
-function DynamicProductMesh({ modelType, color }) {
+const EXPLODED_COMPONENT_SPECS = {
+  front_glass: {
+    title: 'Ceramic Shield Front Glass',
+    badge: 'MOHS LEVEL 7',
+    desc: 'Nano-scale ceramic crystals embedded into ultra-pure glass through a dual-ion exchange infusion, providing 4x drop performance resistance.'
+  },
+  display: {
+    title: 'Super Retina XDR OLED Panel',
+    badge: '120Hz PROMOTION',
+    desc: 'Border-less flexible OLED display with ultra-narrow 1.15mm bezels, 2000 nits outdoor peak brightness, and True Tone color management.'
+  },
+  frame: {
+    title: 'Aerospace Grade 5 Titanium Frame',
+    badge: 'GRADE 5 Ti-6Al-4V',
+    desc: 'Sub-millimeter CNC milled structural enclosure engineered with an internal 100% recycled aluminum thermal substructure for sustained performance.'
+  },
+  motherboard: {
+    title: 'Main Logic Board (3nm Silicon SoC)',
+    badge: '3nm ARCHITECTURE',
+    desc: 'Stacked dual-layer motherboard with vapor chamber copper heat spreader, 16-core Neural Engine, LPDDR5X unified memory, and 5G NR modem.'
+  },
+  battery: {
+    title: 'High-Density Lithium-Cobalt Cell',
+    badge: '4,685 mAh',
+    desc: 'Custom-sculpted L-shaped cell with 100% recycled cobalt cathode, 33-hour continuous video playback, and 30W Qi2 / MagSafe wireless fast charging.'
+  },
+  camera: {
+    title: '48MP Pro Triple Camera System',
+    badge: '5x OPTICAL PERISCOPE',
+    desc: 'Quad-pixel sensor with 2nd-generation sensor-shift optical image stabilisation (OIS), 100% focus pixels, and 4K 120 fps Dolby Vision HDR.'
+  },
+  speakers: {
+    title: 'Spatial Stereo Acoustic Chambers',
+    badge: 'DOLBY ATMOS',
+    desc: 'High-excursion stereo transducers paired with custom amplifiers for room-filling Spatial Audio and ultra-low distortion bass notes.'
+  },
+  charging_port: {
+    title: 'USB-C 10Gb/s Controller & Flex Cable',
+    badge: 'USB 3 CONTROLLER',
+    desc: 'Ultra-durable titanium-reinforced USB-C port supporting 10Gb/s transfer speeds, 4K DisplayPort video output, and 45W Power Delivery.'
+  },
+  back_glass: {
+    title: 'Matte Textured Glass & Qi2 Copper Coil',
+    badge: 'SATIN MATTE FINISH',
+    desc: 'Micro-etched tactile matte back panel featuring an embedded circular magnetic array and multi-strand copper induction coil for fast wireless charging.'
+  }
+};
+
+function DynamicProductMesh({ modelType, color, isExploded }) {
+  const isPhone = ['smartphone', 'phone', 'mobile'].includes(modelType?.toLowerCase());
+
+  if (isPhone && isExploded) {
+    return <ExplodedSmartphoneModel color={color} />;
+  }
+
   switch (modelType?.toLowerCase()) {
     case 'smartphone':
     case 'phone':
@@ -78,8 +133,7 @@ function DynamicProductMesh({ modelType, color }) {
   }
 }
 
-function ProductViewerScene({ modelType, color, features }) {
-  // Adjust scale based on product category for natural canvas framing
+function ProductViewerScene({ modelType, color, features, isExploded }) {
   const getCategoryScale = () => {
     switch (modelType?.toLowerCase()) {
       case 'television':
@@ -108,12 +162,12 @@ function ProductViewerScene({ modelType, color, features }) {
 
   return (
     <group position={[0, 0, 0]} scale={getCategoryScale()}>
-      <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.16}>
-        <DynamicProductMesh modelType={modelType} color={color} />
+      <Float speed={isExploded ? 0 : 1.5} rotationIntensity={isExploded ? 0 : 0.1} floatIntensity={isExploded ? 0 : 0.16}>
+        <DynamicProductMesh modelType={modelType} color={color} isExploded={isExploded} />
       </Float>
 
-      {/* Interactive 3D Hotspots on Product */}
-      <ProductHotspots features={features} />
+      {/* Show Standard Hotspots only in non-exploded mode */}
+      {!isExploded && <ProductHotspots features={features} />}
 
       {/* Realistic Soft Contact Shadow on Clean White Marble Studio Ground */}
       <ContactShadows
@@ -131,6 +185,13 @@ function ProductViewerScene({ modelType, color, features }) {
 export function Product3DViewer({ product: propProduct, className = '' }) {
   const storeProduct = useStore((state) => state.selectedProduct);
   const inspectionColor = useStore((state) => state.inspectionColor);
+  const isExplodedView = useStore((state) => state.isExplodedView);
+  const explosionProgress = useStore((state) => state.explosionProgress);
+  const toggleExplodedView = useStore((state) => state.toggleExplodedView);
+  const setExplosionProgress = useStore((state) => state.setExplosionProgress);
+  const selectedExplodedComponent = useStore((state) => state.selectedExplodedComponent);
+  const setSelectedExplodedComponent = useStore((state) => state.setSelectedExplodedComponent);
+
   const [autoRotate, setAutoRotate] = useState(true);
   const controlsRef = useRef();
 
@@ -138,6 +199,9 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
   const modelType = product?.model_3d?.model_type || product?.model_3d_type || 'smartphone';
   const color = inspectionColor || product?.model_3d?.color_options?.[0]?.hex || '#2874F0';
   const features = product?.features || [];
+
+  const isPhone = ['smartphone', 'phone', 'mobile'].includes(modelType?.toLowerCase());
+  const activeCompData = selectedExplodedComponent ? EXPLODED_COMPONENT_SPECS[selectedExplodedComponent] : null;
 
   const setCameraAngle = (azimuth, polar) => {
     if (controlsRef.current) {
@@ -188,15 +252,16 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
           modelType={modelType}
           color={color}
           features={features}
+          isExploded={isExplodedView}
         />
 
         <OrbitControls
           ref={controlsRef}
           enablePan={false}
           enableZoom={true}
-          minDistance={1.3}
+          minDistance={1.2}
           maxDistance={5.8}
-          autoRotate={autoRotate}
+          autoRotate={autoRotate && !isExplodedView}
           autoRotateSpeed={1.0}
           dampingFactor={0.05}
           enableDamping
@@ -207,18 +272,72 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
         />
       </Canvas>
 
+      {/* Floating Holographic Exploded Component Card (Section 9 & 10) */}
+      {isExplodedView && activeCompData && (
+        <div className="absolute top-6 left-6 max-w-sm bg-white/95 backdrop-blur-xl border border-blue-200/90 rounded-2xl p-4 shadow-2xl z-20 transition-all animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2 mb-2">
+            <span className="text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full bg-blue-50 text-flipkart-blue border border-blue-200">
+              {activeCompData.badge}
+            </span>
+            <button
+              onClick={() => setSelectedExplodedComponent(null)}
+              className="text-slate-400 hover:text-slate-700 p-0.5 rounded-md"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <h4 className="font-extrabold text-sm text-[#172B4D] mb-1">{activeCompData.title}</h4>
+          <p className="text-xs text-slate-600 leading-relaxed">{activeCompData.desc}</p>
+        </div>
+      )}
+
+      {/* Exploded View Control Bar (When Phone is Active) */}
+      {isPhone && (
+        <div className="absolute top-6 right-6 flex items-center gap-2 bg-white/95 backdrop-blur-xl p-2 rounded-2xl shadow-xl border border-slate-200 z-10">
+          <button
+            onClick={toggleExplodedView}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
+              isExplodedView
+                ? 'bg-flipkart-blue text-white shadow-glow-blue'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            <span>{isExplodedView ? 'Assemble Model' : 'Exploded View'}</span>
+          </button>
+
+          {isExplodedView && (
+            <div className="flex items-center gap-2 px-2 border-l border-slate-200">
+              <span className="text-[11px] font-bold text-slate-500">Spread:</span>
+              <input
+                type="range"
+                min="0.1"
+                max="1.0"
+                step="0.05"
+                value={explosionProgress}
+                onChange={(e) => setExplosionProgress(parseFloat(e.target.value))}
+                className="w-24 h-1.5 accent-flipkart-blue rounded-lg cursor-pointer"
+              />
+              <span className="text-[10px] font-mono text-slate-500 w-8">
+                {Math.round(explosionProgress * 100)}%
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Floating 360° Inspection Toolbar (Light Theme Glassmorphic HUD) */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-white/90 backdrop-blur-xl p-1.5 rounded-2xl shadow-glass-light pointer-events-auto border border-slate-200">
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-white/90 backdrop-blur-xl p-1.5 rounded-2xl shadow-glass-light pointer-events-auto border border-slate-200 z-10">
         <button
           onClick={() => setAutoRotate(!autoRotate)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-            autoRotate
+            autoRotate && !isExplodedView
               ? 'bg-flipkart-blue text-white shadow-glow-blue'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
           title="Toggle 360 Auto-Rotate"
         >
-          <RotateCw className={`w-3.5 h-3.5 ${autoRotate ? 'animate-spin' : ''}`} />
+          <RotateCw className={`w-3.5 h-3.5 ${autoRotate && !isExplodedView ? 'animate-spin' : ''}`} />
           <span>360° Auto</span>
         </button>
 

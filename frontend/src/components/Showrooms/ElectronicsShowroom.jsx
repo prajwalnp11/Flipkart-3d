@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Text, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStore } from '../../store/useStore';
+import { AutomaticStoreDoors } from '../Entrance/AutomaticStoreDoors';
 import { SmartphoneModel } from '../ProductViewer/Models3D/SmartphoneModel';
 import { LaptopModel } from '../ProductViewer/Models3D/LaptopModel';
 import { SmartwatchModel } from '../ProductViewer/Models3D/SmartwatchModel';
@@ -70,9 +71,8 @@ function InteractiveDisplayItem({ product, position, rotation = [0, 0, 0], scale
         />
       </mesh>
 
-      {/* Floating Info Tag in Dark Navy */}
+      {/* Floating Info Tag */}
       <group position={[0, -0.15, 0.52]}>
-        {/* White Glass Card */}
         <mesh>
           <boxGeometry args={[1.35, 0.42, 0.04]} />
           <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
@@ -106,333 +106,372 @@ function InteractiveDisplayItem({ product, position, rotation = [0, 0, 0], scale
   );
 }
 
+// Brand Boutique Facade Card on Tech Avenue Concourse
+function BrandStorefrontPortal({ position, rotation, brandKey, name, tagline, color, logoColor, onEnter }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Store Exterior Building Structure */}
+      <mesh position={[0, 2.5, -0.2]} castShadow>
+        <boxGeometry args={[6.4, 5.0, 0.4]} />
+        <meshStandardMaterial color="#0F172A" roughness={0.25} metalness={0.8} />
+      </mesh>
+
+      {/* Brand Fascia Canopy */}
+      <mesh position={[0, 4.4, 0.1]}>
+        <boxGeometry args={[6.2, 0.9, 0.6]} />
+        <meshStandardMaterial color="#1E293B" metalness={0.9} roughness={0.15} />
+      </mesh>
+
+      {/* Brand Glowing Neon Perimeter Edge */}
+      <mesh position={[0, 4.86, 0.42]}>
+        <boxGeometry args={[6.2, 0.06, 0.06]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+
+      {/* Brand 3D Name Sign */}
+      <Text
+        position={[0, 4.45, 0.45]}
+        fontSize={0.42}
+        color={logoColor || '#FFFFFF'}
+        anchorX="center"
+        anchorY="middle"
+        fontWeight={900}
+        letterSpacing={0.08}
+      >
+        {name.toUpperCase()}
+      </Text>
+
+      {/* Slogan */}
+      <Text
+        position={[0, 4.08, 0.45]}
+        fontSize={0.14}
+        color={color}
+        anchorX="center"
+        anchorY="middle"
+        fontWeight={700}
+      >
+        {tagline}
+      </Text>
+
+      {/* Automatic Glass Doors */}
+      <AutomaticStoreDoors
+        position={[0, 0, 0]}
+        width={3.4}
+        height={3.2}
+        isOpen={hovered}
+        brandName={name}
+        brandColor={color}
+        onTriggerEnter={onEnter}
+      />
+
+      {/* Clickable Proximity Floor Hotspot */}
+      <group
+        position={[0, 0.05, 1.8]}
+        onPointerOver={() => {
+          setHovered(true);
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          setHovered(false);
+          document.body.style.cursor = 'auto';
+        }}
+        onClick={onEnter}
+      >
+        <mesh rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[2.8, 1.2]} />
+          <meshBasicMaterial color={color} transparent opacity={hovered ? 0.35 : 0.15} />
+        </mesh>
+        <Text
+          position={[0, 0.02, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
+          fontSize={0.18}
+          color={hovered ? '#FFE500' : '#FFFFFF'}
+          fontWeight={900}
+        >
+          ENTER {name.toUpperCase()} STORE
+        </Text>
+      </group>
+    </group>
+  );
+}
+
 export function ElectronicsShowroom({ floorY = 8 }) {
   const products = useStore((state) => state.products);
+  const selectedBrand = useStore((state) => state.selectedBrand);
+  const enterBrandStore = useStore((state) => state.enterBrandStore);
+  const exitBrandStore = useStore((state) => state.exitBrandStore);
 
-  // Match products from store/catalog
-  const iphone = products.find((p) => p.slug === 'iphone-16-pro-max');
-  const macbook = products.find((p) => p.slug === 'macbook-pro-16-m4-max');
-  const sonyHeadphones = products.find((p) => p.slug === 'sony-wh-1000xm5');
-  const appleWatch = products.find((p) => p.slug === 'apple-watch-ultra-2');
-  const cameraProd = products.find((p) => p.slug === 'sony-alpha-a7-iv') || {
-    id: 101,
-    name: 'Sony Alpha A7 IV Mirrorless Camera',
-    slug: 'sony-alpha-a7-iv',
-    brand: 'Sony',
-    price: 242990,
-    floor_number: 1,
-    model_3d_type: 'camera'
+  // Filter products by brand when inside a brand store
+  const appleProducts = products.filter((p) => p.brand?.toLowerCase() === 'apple');
+  const samsungProducts = products.filter((p) => p.brand?.toLowerCase() === 'samsung');
+  const googleProducts = products.filter((p) => p.brand?.toLowerCase() === 'google');
+  const oneplusProducts = products.filter((p) => p.brand?.toLowerCase() === 'oneplus');
+  const xiaomiProducts = products.filter((p) => p.brand?.toLowerCase() === 'xiaomi');
+  const nothingProducts = products.filter((p) => p.brand?.toLowerCase() === 'nothing');
+
+  // Active Brand Store Data
+  const BRAND_CONFIGS = {
+    apple: {
+      name: 'Apple',
+      tagline: 'Titanium Innovation • Pro Performance',
+      themeColor: '#0284C7',
+      floorColor: '#F8FAFC',
+      accentColor: '#C2A385',
+      products: appleProducts
+    },
+    samsung: {
+      name: 'Samsung Galaxy',
+      tagline: 'Galaxy AI Is Here • 200MP Quad Tele',
+      themeColor: '#2874F0',
+      floorColor: '#0F172A',
+      accentColor: '#38BDF8',
+      products: samsungProducts
+    },
+    google: {
+      name: 'Google Pixel',
+      tagline: 'Engineered by Google • Gemini Built-In',
+      themeColor: '#EA4335',
+      floorColor: '#F5F5F0',
+      accentColor: '#34A853',
+      products: googleProducts
+    },
+    oneplus: {
+      name: 'OnePlus',
+      tagline: 'Never Settle • 100W SUPERVOOC & Hasselblad',
+      themeColor: '#EB0029',
+      floorColor: '#18181B',
+      accentColor: '#EB0029',
+      products: oneplusProducts
+    },
+    xiaomi: {
+      name: 'Xiaomi Leica',
+      tagline: 'Co-Engineered with Leica • 1-inch Optical Beast',
+      themeColor: '#FF6900',
+      floorColor: '#1E293B',
+      accentColor: '#FF6900',
+      products: xiaomiProducts
+    },
+    nothing: {
+      name: 'Nothing',
+      tagline: 'Pure Glyph Design • Dot-Matrix Futurism',
+      themeColor: '#FFFFFF',
+      floorColor: '#111827',
+      accentColor: '#00F0FF',
+      products: nothingProducts
+    }
   };
-  const speakerProd = products.find((p) => p.slug === 'jbl-charge-5') || {
-    id: 102,
-    name: 'JBL Charge 5 Pro Bluetooth Speaker',
-    slug: 'jbl-charge-5',
-    brand: 'JBL',
-    price: 15999,
-    floor_number: 1,
-    model_3d_type: 'speaker'
-  };
-  const earbudsProd = products.find((p) => p.slug === 'apple-airpods-pro-2') || {
-    id: 103,
-    name: 'Apple AirPods Pro 2 (USB-C)',
-    slug: 'apple-airpods-pro-2',
-    brand: 'Apple',
-    price: 24900,
-    floor_number: 1,
-    model_3d_type: 'earbuds'
-  };
-  const ipad = products.find((p) => p.slug === 'apple-ipad-pro-13-m4') || {
-    id: 104,
-    name: 'Apple iPad Pro 13" (M4 OLED)',
-    slug: 'apple-ipad-pro-13-m4',
-    brand: 'Apple',
-    price: 129900,
-    floor_number: 1,
-    model_3d_type: 'tablet'
-  };
+
+  const currentBrandConfig = selectedBrand ? BRAND_CONFIGS[selectedBrand] : null;
 
   return (
     <group position={[0, floorY, 0]}>
-      {/* ================= 1. CARPETED RUNWAY & WHITE MARBLE FLOORING ================= */}
-      <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[36, 28]} />
-        <meshStandardMaterial color="#F8FAFC" roughness={0.12} metalness={0.2} />
-      </mesh>
-      {/* Polished Blue Ceramic Perimeter Ribbon */}
-      <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[13.2, 13.4, 48]} />
-        <meshBasicMaterial color="#2874F0" />
-      </mesh>
-
-      {/* ================= 2. DEPARTMENT MAIN HEADER BILLBOARD ================= */}
-      <group position={[0, 5.8, -7.15]}>
-        <mesh>
-          <boxGeometry args={[14, 1.4, 0.08]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
-        </mesh>
-        <mesh position={[0, 0.65, 0.02]}>
-          <boxGeometry args={[14, 0.1, 0.06]} />
-          <meshBasicMaterial color="#2874F0" />
-        </mesh>
-        <Text
-          position={[0, 0.18, 0.06]}
-          fontSize={0.38}
-          color="#172B4D"
-          anchorX="center"
-          anchorY="middle"
-          fontWeight={900}
-        >
-          ELECTRONICS & MOBILES SHOWROOM
-        </Text>
-        <Text
-          position={[0, -0.25, 0.06]}
-          fontSize={0.17}
-          color="#2874F0"
-          anchorX="center"
-          anchorY="middle"
-          fontWeight={700}
-        >
-          FLAGSHIP SMARTPHONES • PRO LAPTOPS • WEARABLES • AUDIO • 4K CAMERAS
-        </Text>
-      </group>
-
-      {/* ================= 3. ZONE 1: SMARTPHONES PAVILION ================= */}
-      <group position={[-5.5, 0, -1.0]}>
-        {/* White Gloss Island Table with Blue LED Trim */}
-        <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
-          <boxGeometry args={[4.2, 0.9, 1.8]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.15} />
-        </mesh>
-        {/* Blue LED Underglow Trim */}
-        <mesh position={[0, 0.05, 0]}>
-          <boxGeometry args={[4.22, 0.08, 1.82]} />
-          <meshBasicMaterial color="#2874F0" />
-        </mesh>
-        {/* Zone Overhead Sign */}
-        <group position={[0, 3.2, 0]}>
-          <mesh>
-            <boxGeometry args={[2.8, 0.5, 0.06]} />
-            <meshStandardMaterial color="#FFFFFF" roughness={0.2} />
+      {/* ================= MODE A: TECH AVENUE (BRAND CONCOURSE) ================= */}
+      {!selectedBrand && (
+        <group>
+          {/* Reflective Concourse Marble Floor */}
+          <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <planeGeometry args={[38, 30]} />
+            <meshStandardMaterial color="#F8FAFC" roughness={0.12} metalness={0.25} />
           </mesh>
-          <mesh position={[0, 0.23, 0.02]}>
-            <boxGeometry args={[2.8, 0.04, 0.04]} />
+
+          {/* Central Blue Neon Concourse Guide Ribbons */}
+          <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[5.2, 5.35, 48]} />
             <meshBasicMaterial color="#2874F0" />
           </mesh>
-          <Text position={[0, 0, 0.04]} fontSize={0.18} color="#172B4D" fontWeight={900}>
-            SMARTPHONES
-          </Text>
-        </group>
-
-        {/* Display Item 1: iPhone 16 Pro Max (Desert Titanium) */}
-        <InteractiveDisplayItem
-          product={iphone}
-          position={[-1.2, 0.9, 0]}
-          label="iPhone 16 Pro Max"
-          brand="Apple"
-          scale={0.52}
-        >
-          <SmartphoneModel color="#C2A385" />
-        </InteractiveDisplayItem>
-
-        {/* Display Item 2: Galaxy S24 Ultra (Titanium Black) */}
-        <InteractiveDisplayItem
-          product={iphone}
-          position={[0, 0.9, 0]}
-          label="Galaxy S24 Ultra"
-          brand="Samsung"
-          scale={0.52}
-        >
-          <SmartphoneModel color="#1E293B" />
-        </InteractiveDisplayItem>
-
-        {/* Display Item 3: Pixel 9 Pro (Porcelain White) */}
-        <InteractiveDisplayItem
-          product={iphone}
-          position={[1.2, 0.9, 0]}
-          label="Google Pixel 9 Pro"
-          brand="Google"
-          scale={0.52}
-        >
-          <SmartphoneModel color="#F1F5F9" />
-        </InteractiveDisplayItem>
-      </group>
-
-      {/* ================= 4. ZONE 2: LAPTOPS & COMPUTERS ================= */}
-      <group position={[5.5, 0, -1.0]}>
-        {/* Modern Wood & White Presentation Desk */}
-        <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
-          <boxGeometry args={[4.2, 0.9, 1.8]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.15} />
-        </mesh>
-        <mesh position={[0, 0.05, 0]}>
-          <boxGeometry args={[4.22, 0.08, 1.82]} />
-          <meshBasicMaterial color="#2874F0" />
-        </mesh>
-        {/* Zone Overhead Sign */}
-        <group position={[0, 3.2, 0]}>
-          <mesh>
-            <boxGeometry args={[3.4, 0.5, 0.06]} />
-            <meshStandardMaterial color="#FFFFFF" roughness={0.2} />
+          <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[11.5, 11.65, 48]} />
+            <meshBasicMaterial color="#0284C7" />
           </mesh>
-          <mesh position={[0, 0.23, 0.02]}>
-            <boxGeometry args={[3.4, 0.04, 0.04]} />
-            <meshBasicMaterial color="#2874F0" />
-          </mesh>
-          <Text position={[0, 0, 0.04]} fontSize={0.17} color="#172B4D" fontWeight={900}>
-            LAPTOPS, TABLETS & COMPUTERS
-          </Text>
+
+          {/* Grand Concourse Entrance Billboard */}
+          <group position={[0, 5.8, -12.5]}>
+            <mesh>
+              <boxGeometry args={[16, 1.4, 0.1]} />
+              <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
+            </mesh>
+            <mesh position={[0, 0.65, 0.02]}>
+              <boxGeometry args={[16, 0.1, 0.08]} />
+              <meshBasicMaterial color="#2874F0" />
+            </mesh>
+            <Text position={[0, 0.18, 0.08]} fontSize={0.38} color="#172B4D" fontWeight={900}>
+              TECH AVENUE – FLAGSHIP BRAND CONCOURSE
+            </Text>
+            <Text position={[0, -0.25, 0.08]} fontSize={0.16} color="#2874F0" fontWeight={700}>
+              SELECT A BRAND STOREFRONT TO ENTER ITS EXCLUSIVE SHOWROOM
+            </Text>
+          </group>
+
+          {/* ================= 6 INDIVIDUAL BRAND STOREFRONTS (Section 6) ================= */}
+          {/* 1. Apple Flagship Storefront */}
+          <BrandStorefrontPortal
+            position={[-7.5, 0, -5.5]}
+            rotation={[0, Math.PI / 6, 0]}
+            brandKey="apple"
+            name="Apple"
+            tagline="Titanium Innovation • Pro Performance"
+            color="#0284C7"
+            logoColor="#FFFFFF"
+            onEnter={() => enterBrandStore('apple')}
+          />
+
+          {/* 2. Samsung Galaxy Storefront */}
+          <BrandStorefrontPortal
+            position={[7.5, 0, -5.5]}
+            rotation={[0, -Math.PI / 6, 0]}
+            brandKey="samsung"
+            name="Samsung Galaxy"
+            tagline="Galaxy AI Is Here • 200MP Quad Tele"
+            color="#2874F0"
+            logoColor="#38BDF8"
+            onEnter={() => enterBrandStore('samsung')}
+          />
+
+          {/* 3. Google Pixel Studio */}
+          <BrandStorefrontPortal
+            position={[-8.5, 0, 3.5]}
+            rotation={[0, Math.PI / 3, 0]}
+            brandKey="google"
+            name="Google Pixel"
+            tagline="Engineered by Google • Gemini Built-In"
+            color="#EA4335"
+            logoColor="#FFFFFF"
+            onEnter={() => enterBrandStore('google')}
+          />
+
+          {/* 4. OnePlus Experience Store */}
+          <BrandStorefrontPortal
+            position={[8.5, 0, 3.5]}
+            rotation={[0, -Math.PI / 3, 0]}
+            brandKey="oneplus"
+            name="OnePlus"
+            tagline="Never Settle • 100W SUPERVOOC Flash"
+            color="#EB0029"
+            logoColor="#FFFFFF"
+            onEnter={() => enterBrandStore('oneplus')}
+          />
+
+          {/* 5. Xiaomi Leica Gallery */}
+          <BrandStorefrontPortal
+            position={[0, 0, -11.5]}
+            rotation={[0, 0, 0]}
+            brandKey="xiaomi"
+            name="Xiaomi Leica"
+            tagline="Co-Engineered with Leica 1-inch Optics"
+            color="#FF6900"
+            logoColor="#FFFFFF"
+            onEnter={() => enterBrandStore('xiaomi')}
+          />
+
+          {/* 6. Nothing Concept Store */}
+          <BrandStorefrontPortal
+            position={[0, 0, 9.5]}
+            rotation={[0, Math.PI, 0]}
+            brandKey="nothing"
+            name="Nothing"
+            tagline="Transparent Glyph Futurism"
+            color="#00F0FF"
+            logoColor="#FFFFFF"
+            onEnter={() => enterBrandStore('nothing')}
+          />
         </group>
+      )}
 
-        {/* Display Item 1: MacBook Pro 16" (Space Black) */}
-        <InteractiveDisplayItem
-          product={macbook}
-          position={[-1.4, 0.9, 0]}
-          label={'MacBook Pro 16" M4'}
-          brand="Apple"
-          scale={0.5}
-        >
-          <LaptopModel color="#1C1D1F" />
-        </InteractiveDisplayItem>
-
-        {/* Display Item 2: Apple iPad Pro 13" (Tandem OLED) */}
-        <InteractiveDisplayItem
-          product={ipad}
-          position={[0, 0.9, 0]}
-          label={'iPad Pro 13" M4'}
-          brand="Apple"
-          scale={0.55}
-        >
-          <TabletModel color="#1C1D1F" />
-        </InteractiveDisplayItem>
-
-        {/* Display Item 3: Ultrabook Studio (Silver) */}
-        <InteractiveDisplayItem
-          product={macbook}
-          position={[1.4, 0.9, 0]}
-          label="Pro Studio Ultra 16"
-          brand="Dell"
-          scale={0.5}
-        >
-          <LaptopModel color="#E2E8F0" />
-        </InteractiveDisplayItem>
-      </group>
-
-      {/* ================= 5. ZONE 3: SMARTWATCHES SHOWCASE ================= */}
-      <group position={[0, 0, 1.8]}>
-        {/* Cylindrical Glass Showcase Stand */}
-        <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[1.2, 1.2, 0.9, 32]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.2} />
-        </mesh>
-        <mesh position={[0, 0.05, 0]}>
-          <cylinderGeometry args={[1.22, 1.22, 0.08, 32]} />
-          <meshBasicMaterial color="#2874F0" />
-        </mesh>
-        {/* Glass Dome Cover */}
-        <mesh position={[0, 1.25, 0]}>
-          <cylinderGeometry args={[1.1, 1.1, 0.7, 32]} />
-          <meshPhysicalMaterial color="#BAE6FD" transmission={0.92} transparent opacity={0.3} roughness={0.05} />
-        </mesh>
-
-        {/* Watch on Showcase: Apple Watch Ultra 2 */}
-        <InteractiveDisplayItem
-          product={appleWatch}
-          position={[0, 0.95, 0]}
-          label="Apple Watch Ultra 2"
-          brand="Apple"
-          scale={0.65}
-        >
-          <SmartwatchModel color="#B5AEA4" />
-        </InteractiveDisplayItem>
-      </group>
-
-      {/* ================= 6. ZONE 4: STUDIO AUDIO (LEFT WING) ================= */}
-      <group position={[-11.5, 0, 2.5]}>
-        <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
-          <boxGeometry args={[2.8, 0.9, 3.2]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.15} />
-        </mesh>
-        <mesh position={[0, 0.05, 0]}>
-          <boxGeometry args={[2.82, 0.08, 3.22]} />
-          <meshBasicMaterial color="#2874F0" />
-        </mesh>
-        {/* Audio Zone Sign */}
-        <group position={[0, 3.2, 0]} rotation={[0, Math.PI / 2, 0]}>
-          <mesh>
-            <boxGeometry args={[2.4, 0.45, 0.06]} />
-            <meshStandardMaterial color="#FFFFFF" roughness={0.2} />
+      {/* ================= MODE B: EXCLUSIVE BRAND BOUTIQUE (Section 6) ================= */}
+      {selectedBrand && currentBrandConfig && (
+        <group>
+          {/* Custom Brand Showroom Floor */}
+          <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <planeGeometry args={[26, 22]} />
+            <meshStandardMaterial
+              color={currentBrandConfig.floorColor}
+              roughness={0.15}
+              metalness={0.3}
+            />
           </mesh>
-          <Text position={[0, 0, 0.04]} fontSize={0.16} color="#172B4D" fontWeight={900}>
-            STUDIO AUDIO
-          </Text>
+
+          {/* Brand Overhead Billboard & Header Sign */}
+          <group position={[0, 5.4, -7.5]}>
+            <mesh>
+              <boxGeometry args={[13, 1.3, 0.08]} />
+              <meshStandardMaterial color="#0F172A" roughness={0.2} metalness={0.8} />
+            </mesh>
+            <mesh position={[0, 0.6, 0.02]}>
+              <boxGeometry args={[13, 0.08, 0.06]} />
+              <meshBasicMaterial color={currentBrandConfig.themeColor} />
+            </mesh>
+            <Text
+              position={[0, 0.16, 0.06]}
+              fontSize={0.4}
+              color={currentBrandConfig.accentColor}
+              fontWeight={900}
+              letterSpacing={0.06}
+            >
+              {currentBrandConfig.name.toUpperCase()} BOUTIQUE
+            </Text>
+            <Text
+              position={[0, -0.26, 0.06]}
+              fontSize={0.15}
+              color="#94A3B8"
+              fontWeight={700}
+            >
+              {currentBrandConfig.tagline}
+            </Text>
+          </group>
+
+          {/* Back to Concourse Interactive Portal */}
+          <group position={[0, 0, 8.5]}>
+            <AutomaticStoreDoors
+              position={[0, 0, 0]}
+              width={3.4}
+              height={3.0}
+              isOpen={false}
+              brandName="EXIT TO TECH AVENUE"
+              brandColor="#2874F0"
+              onTriggerEnter={exitBrandStore}
+            />
+          </group>
+
+          {/* Brand Product Island Counters (Strictly that Brand's Catalog) */}
+          <group position={[0, 0, 0]}>
+            {/* White Gloss Island Display Counter */}
+            <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
+              <boxGeometry args={[7.2, 0.9, 2.4]} />
+              <meshStandardMaterial color="#FFFFFF" roughness={0.12} metalness={0.1} />
+            </mesh>
+            <mesh position={[0, 0.04, 0]}>
+              <boxGeometry args={[7.24, 0.08, 2.44]} />
+              <meshBasicMaterial color={currentBrandConfig.themeColor} />
+            </mesh>
+
+            {/* Display Products of this Brand */}
+            {currentBrandConfig.products.length > 0 ? (
+              currentBrandConfig.products.slice(0, 3).map((prod, idx) => {
+                const posX = (idx - (Math.min(currentBrandConfig.products.length, 3) - 1) / 2) * 2.2;
+                return (
+                  <InteractiveDisplayItem
+                    key={prod.id || prod.slug}
+                    product={prod}
+                    position={[posX, 0.9, 0]}
+                    label={prod.name}
+                    brand={prod.brand}
+                    price={`₹${Number(prod.price).toLocaleString('en-IN')}`}
+                    scale={0.52}
+                  >
+                    <SmartphoneModel color={prod.model_3d?.color_options?.[0]?.hex || currentBrandConfig.accentColor} />
+                  </InteractiveDisplayItem>
+                );
+              })
+            ) : (
+              <Text position={[0, 1.2, 0]} fontSize={0.25} color="#172B4D" fontWeight={900}>
+                Flagship Devices on Display
+              </Text>
+            )}
+          </group>
         </group>
-
-        {/* Sony Headphones */}
-        <InteractiveDisplayItem
-          product={sonyHeadphones}
-          position={[0, 0.9, -0.8]}
-          label="Sony WH-1000XM5"
-          brand="Sony"
-          scale={0.55}
-        >
-          <HeadphonesModel color="#1B263B" />
-        </InteractiveDisplayItem>
-
-        {/* Wireless Earbuds */}
-        <InteractiveDisplayItem
-          product={earbudsProd}
-          position={[0, 0.9, 0.8]}
-          label="AirPods Pro 2"
-          brand="Apple"
-          scale={0.7}
-        >
-          <EarbudsModel color="#FFFFFF" />
-        </InteractiveDisplayItem>
-      </group>
-
-      {/* ================= 7. ZONE 5: PRO CAMERAS (RIGHT WING) ================= */}
-      <group position={[11.5, 0, 2.5]}>
-        <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
-          <boxGeometry args={[2.8, 0.9, 3.2]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.15} />
-        </mesh>
-        <mesh position={[0, 0.05, 0]}>
-          <boxGeometry args={[2.82, 0.08, 3.22]} />
-          <meshBasicMaterial color="#2874F0" />
-        </mesh>
-        {/* Cameras Zone Sign */}
-        <group position={[0, 3.2, 0]} rotation={[0, -Math.PI / 2, 0]}>
-          <mesh>
-            <boxGeometry args={[2.4, 0.45, 0.06]} />
-            <meshStandardMaterial color="#FFFFFF" roughness={0.2} />
-          </mesh>
-          <Text position={[0, 0, 0.04]} fontSize={0.16} color="#172B4D" fontWeight={900}>
-            PRO CAMERAS
-          </Text>
-        </group>
-
-        {/* Sony Alpha Camera */}
-        <InteractiveDisplayItem
-          product={cameraProd}
-          position={[0, 0.9, -0.8]}
-          label="Sony Alpha A7 IV"
-          brand="Sony"
-          scale={0.52}
-        >
-          <CameraModel color="#18181B" />
-        </InteractiveDisplayItem>
-
-        {/* Bluetooth Speaker */}
-        <InteractiveDisplayItem
-          product={speakerProd}
-          position={[0, 0.9, 0.8]}
-          label="JBL Charge 5"
-          brand="JBL"
-          scale={0.52}
-        >
-          <SpeakerModel color="#2874F0" />
-        </InteractiveDisplayItem>
-      </group>
+      )}
     </group>
   );
 }

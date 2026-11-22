@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store/useStore';
 import {
   ShoppingBag,
@@ -12,7 +12,10 @@ import {
   Layers,
   Sparkles,
   Sliders,
-  Grid
+  Grid,
+  Gamepad2,
+  Video,
+  LogOut
 } from 'lucide-react';
 
 export function NavigationHUD() {
@@ -22,7 +25,11 @@ export function NavigationHUD() {
   const currentFloor = useStore((state) => state.currentFloor);
   const targetFloor = useStore((state) => state.targetFloor);
   const selectedProduct = useStore((state) => state.selectedProduct);
-  const selectedCategory = useStore((state) => state.selectedCategory);
+  const selectedBrand = useStore((state) => state.selectedBrand);
+  const exitBrandStore = useStore((state) => state.exitBrandStore);
+  const navigationMode = useStore((state) => state.navigationMode);
+  const toggleNavigationMode = useStore((state) => state.toggleNavigationMode);
+  const interactionPrompt = useStore((state) => state.interactionPrompt);
   const quality = useStore((state) => state.quality || 'high');
   const setQuality = useStore((state) => state.setQuality);
   const isClassicView = useStore((state) => state.isClassicView || state.is2DFallback);
@@ -87,6 +94,18 @@ export function NavigationHUD() {
                 <span className="font-black text-sm text-flipkart-blue">3D</span>
               </div>
             </div>
+
+            {/* Back to Concourse Button if inside a Brand Boutique */}
+            {selectedBrand && (
+              <button
+                onClick={exitBrandStore}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 transition-all text-xs font-bold shadow-sm"
+                title="Exit Boutique back to Tech Avenue"
+              >
+                <LogOut className="w-3.5 h-3.5 text-amber-600" />
+                <span>Exit {selectedBrand.toUpperCase()}</span>
+              </button>
+            )}
           </div>
 
           {/* Center: Floor Navigation Tabs */}
@@ -118,8 +137,31 @@ export function NavigationHUD() {
             })}
           </div>
 
-          {/* Right: Search, Mute & Cart */}
+          {/* Right: Avatar Mode Toggle, Search, Mute & Cart */}
           <div className="flex items-center gap-2 pointer-events-auto">
+            {/* Free Avatar Walk vs Guided Tour Toggle (Section 4) */}
+            <button
+              onClick={toggleNavigationMode}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border shadow-sm ${
+                navigationMode === 'avatar'
+                  ? 'bg-emerald-500 text-white border-emerald-600 shadow-glow-blue'
+                  : 'bg-white/90 backdrop-blur-md text-slate-700 hover:bg-white border-slate-200/80'
+              }`}
+              title="Toggle Avatar Walk Mode (WASD) vs Cinematic Guided Mode"
+            >
+              {navigationMode === 'avatar' ? (
+                <>
+                  <Gamepad2 className="w-4 h-4 text-white" />
+                  <span className="hidden md:inline">Avatar Walk (WASD)</span>
+                </>
+              ) : (
+                <>
+                  <Video className="w-4 h-4 text-flipkart-blue" />
+                  <span className="hidden md:inline">Guided Tour</span>
+                </>
+              )}
+            </button>
+
             <button
               onClick={() => setSearchOpen(true)}
               className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/90 backdrop-blur-md text-slate-700 hover:text-flipkart-blue hover:bg-white transition-all text-xs font-bold border border-slate-200/80 shadow-sm hover:scale-105"
@@ -153,7 +195,29 @@ export function NavigationHUD() {
         </div>
       </header>
 
-      {/* ================= 2. BOTTOM-LEFT: LOCATION & BREADCRUMBS CHIP (UX Principle #3 & #6) ================= */}
+      {/* ================= 2. PROXIMITY INTERACTION BANNER ('E') ================= */}
+      <AnimatePresence>
+        {interactionPrompt && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
+          >
+            <button
+              onClick={interactionPrompt.action}
+              className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-[#0F172A]/90 backdrop-blur-xl border border-blue-400/50 shadow-2xl text-white font-black text-sm hover:scale-105 transition-all group"
+            >
+              <span className="w-7 h-7 rounded-lg bg-flipkart-blue flex items-center justify-center font-mono text-xs shadow-md group-hover:bg-flipkart-yellow group-hover:text-black transition-colors">
+                E
+              </span>
+              <span>{interactionPrompt.text}</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= 3. BOTTOM-LEFT: LOCATION & BREADCRUMBS CHIP ================= */}
       <div className="absolute bottom-6 left-6 z-40 pointer-events-none">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
@@ -178,11 +242,21 @@ export function NavigationHUD() {
               else quickJumpToFloor(floorNumber);
             }}
             className={`hover:text-flipkart-blue transition-colors ${
-              !selectedProduct ? 'text-flipkart-blue font-extrabold' : 'text-slate-600'
+              !selectedProduct && !selectedBrand ? 'text-flipkart-blue font-extrabold' : 'text-slate-600'
             }`}
           >
             {currentFloorObj.name}
           </button>
+
+          {/* Active Brand Boutique Crumb */}
+          {selectedBrand && !selectedProduct && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-flipkart-blue font-extrabold uppercase">
+                {selectedBrand} Store
+              </span>
+            </>
+          )}
 
           {/* Active Product Crumb */}
           {selectedProduct && (
@@ -196,7 +270,7 @@ export function NavigationHUD() {
         </motion.div>
       </div>
 
-      {/* ================= 3. BOTTOM-RIGHT: CONTEXT ACTIONS (UX Principle #3) ================= */}
+      {/* ================= 4. BOTTOM-RIGHT: CONTEXT ACTIONS ================= */}
       <div className="absolute bottom-6 right-6 z-40 pointer-events-none flex items-center gap-2">
         <motion.div
           initial={{ opacity: 0, y: 15 }}

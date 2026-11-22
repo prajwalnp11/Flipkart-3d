@@ -9,6 +9,7 @@ import { GroundLobby } from '../components/Floors/GroundLobby';
 import { ElectronicsShowroom } from '../components/Showrooms/ElectronicsShowroom';
 import { FashionShowroom } from '../components/Showrooms/FashionShowroom';
 import { HomeShowroom } from '../components/Showrooms/HomeShowroom';
+import { CustomerAvatar } from '../components/Navigation/CustomerAvatar';
 
 // Exact floor vertical Y coordinates across the 4-storey architecture
 const FLOOR_Y_MAP = {
@@ -18,13 +19,17 @@ const FLOOR_Y_MAP = {
   3: 24   // Floor 3: Home & Living Showroom
 };
 
-// Camera Rig that smoothly animates camera position & lookAt between mall floors and elevator
+// Camera Rig that smoothly animates camera position & lookAt between mall floors and avatar
 function CameraRig() {
   const currentView = useStore((state) => state.currentView);
   const phase = useStore((state) => state.phase);
   const selectedFloor = useStore((state) => state.selectedFloor);
   const currentFloor = useStore((state) => state.currentFloor);
   const targetFloor = useStore((state) => state.targetFloor);
+  const selectedBrand = useStore((state) => state.selectedBrand);
+  const navigationMode = useStore((state) => state.navigationMode);
+  const avatarPosition = useStore((state) => state.avatarPosition || [0, 0, 8]);
+  const avatarRotation = useStore((state) => state.avatarRotation || 0);
 
   const targetCamPos = useRef(new THREE.Vector3(0, 3.6, 18));
   const targetLookAt = useRef(new THREE.Vector3(0, 5.2, -2));
@@ -53,10 +58,6 @@ function CameraRig() {
       targetCamPos.current.set(0, 2.6, 10.5);
       targetLookAt.current.set(0, 1.4, 0);
       elevatorCurrentY.current = 0;
-    } else if (isLobbyPhase) {
-      targetCamPos.current.set(0, 2.6, 10.5);
-      targetLookAt.current.set(0, 1.4, 0);
-      elevatorCurrentY.current = 0;
     } else if (isToElevatorPhase) {
       // Camera smoothly moves towards the glass elevator entrance at current floor
       targetCamPos.current.set(0, currentFloorY + 1.8, -4.2);
@@ -72,12 +73,31 @@ function CameraRig() {
       targetCamPos.current.set(0, elevatorCurrentY.current + 1.75, -6.8);
       // Look outward through front panoramic glass into the open central atrium
       targetLookAt.current.set(0, elevatorCurrentY.current + 1.75, 4.5);
-    } else if (isShowroomPhase) {
-      // Inside the selected showroom floor
+    } else if (navigationMode === 'avatar') {
+      // Third-Person Over-the-Shoulder Camera following Customer Avatar (Section 4)
+      const offset = new THREE.Vector3(0, 1.9, 3.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), avatarRotation);
+      targetCamPos.current.set(
+        avatarPosition[0] + offset.x,
+        avatarPosition[1] + offset.y,
+        avatarPosition[2] + offset.z
+      );
+      targetLookAt.current.set(
+        avatarPosition[0],
+        avatarPosition[1] + 1.35,
+        avatarPosition[2]
+      );
+    } else if (isShowroomPhase && selectedBrand) {
+      // Inside selected Brand Store Boutique on Floor 1 (Section 6)
       elevatorCurrentY.current = currentFloorY;
-      targetCamPos.current.set(0, currentFloorY + 2.5, 9.2);
-      targetLookAt.current.set(0, currentFloorY + 1.4, 0);
+      targetCamPos.current.set(0, currentFloorY + 1.8, 4.8);
+      targetLookAt.current.set(0, currentFloorY + 1.05, 0);
+    } else if (isLobbyPhase) {
+      targetCamPos.current.set(0, 2.6, 10.5);
+      targetLookAt.current.set(0, 1.4, 0);
+      elevatorCurrentY.current = 0;
     } else {
+      // Standard Floor View
+      elevatorCurrentY.current = currentFloorY;
       targetCamPos.current.set(0, currentFloorY + 2.5, 9.2);
       targetLookAt.current.set(0, currentFloorY + 1.4, 0);
     }
@@ -133,8 +153,11 @@ function AdaptivePerformanceMonitor() {
 export function MallScene() {
   const currentView = useStore((state) => state.currentView);
   const phase = useStore((state) => state.phase);
+  const currentFloor = useStore((state) => state.currentFloor);
+  const selectedFloor = useStore((state) => state.selectedFloor);
   const quality = useStore((state) => state.quality || 'high');
 
+  const activeFloor = selectedFloor !== undefined ? selectedFloor : currentFloor;
   const isExterior = currentView === 'EXTERIOR' && phase === 'exterior';
 
   const dpr = quality === 'high' ? [1, 2] : quality === 'medium' ? [1, 1.5] : 1;
@@ -157,7 +180,7 @@ export function MallScene() {
         <color attach="background" args={['#F5F8FE']} />
         <fog attach="fog" args={['#F5F8FE', 24, 75]} />
 
-        {/* Natural Daylight Hemisphere Lighting - Soft sky blue from above, warm floor bounce */}
+        {/* Natural Daylight Hemisphere Lighting */}
         <hemisphereLight
           skyColor="#FFFFFF"
           groundColor="#DCE8FA"
@@ -190,7 +213,7 @@ export function MallScene() {
         {/* 2. Grand Interior Shopping Mall Architecture (Multi-Storey Open Atrium) */}
         {!isExterior && (
           <group>
-            {/* Grand Architecture (Carrara Marble, Multi-Level Atrium, Escalators, Pillars, Skylight) */}
+            {/* Grand Architecture */}
             <MallArchitecture />
 
             {/* Panoramic Glass Elevator with Vertical Physical Transit */}
@@ -199,14 +222,17 @@ export function MallScene() {
             {/* Ground Floor (Y = 0): Grand Lobby & Category Gateways */}
             <GroundLobby />
 
-            {/* Floor 1 (Y = 8): Electronics Showroom (5 Tech Zones) */}
+            {/* Floor 1 (Y = 8): Electronics Showroom & Brand Boutiques */}
             <ElectronicsShowroom floorY={8} />
 
-            {/* Floor 2 (Y = 16): Fashion Showroom (Sneaker Vault, Blazers & Handbags) */}
+            {/* Floor 2 (Y = 16): Fashion Showroom & Luxury Boutiques */}
             <FashionShowroom floorY={16} />
 
-            {/* Floor 3 (Y = 24): Home & Living Showroom (Nordic Furniture & Smart Appliances) */}
+            {/* Floor 3 (Y = 24): Home, Living, Appliances, Supermarket & Books */}
             <HomeShowroom floorY={24} />
+
+            {/* Controllable 3D Customer Avatar */}
+            <CustomerAvatar floorY={FLOOR_Y_MAP[activeFloor] || 0} />
           </group>
         )}
 
