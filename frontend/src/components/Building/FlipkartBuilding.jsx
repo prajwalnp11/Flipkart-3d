@@ -13,15 +13,12 @@ function Pedestrian({ initialPos, speed, color = '#2874F0' }) {
   useFrame((state) => {
     if (!meshRef.current) return;
     const t = state.clock.getElapsedTime() * speed;
-    // Walk along z towards entrance (z = 0)
     meshRef.current.position.z -= speed * 0.02;
     if (meshRef.current.position.z < 2.0) {
       meshRef.current.position.z = initialPos[2];
     }
-    // Subtle natural bounce
     meshRef.current.position.y = initialPos[1] + Math.abs(Math.sin(t * 8)) * 0.05;
 
-    // Leg swing
     if (legLeftRef.current && legRightRef.current) {
       legLeftRef.current.rotation.x = Math.sin(t * 8) * 0.4;
       legRightRef.current.rotation.x = -Math.sin(t * 8) * 0.4;
@@ -30,22 +27,18 @@ function Pedestrian({ initialPos, speed, color = '#2874F0' }) {
 
   return (
     <group ref={meshRef} position={initialPos}>
-      {/* Head */}
       <mesh position={[0, 1.45, 0]}>
         <sphereGeometry args={[0.12, 16, 16]} />
         <meshStandardMaterial color="#FCD34D" roughness={0.4} />
       </mesh>
-      {/* Torso */}
       <mesh position={[0, 1.05, 0]} castShadow>
         <cylinderGeometry args={[0.14, 0.12, 0.55, 12]} />
         <meshStandardMaterial color={color} roughness={0.5} />
       </mesh>
-      {/* Left Leg */}
       <mesh ref={legLeftRef} position={[-0.08, 0.45, 0]}>
         <cylinderGeometry args={[0.045, 0.04, 0.6, 8]} />
         <meshStandardMaterial color="#1E293B" roughness={0.7} />
       </mesh>
-      {/* Right Leg */}
       <mesh ref={legRightRef} position={[0.08, 0.45, 0]}>
         <cylinderGeometry args={[0.045, 0.04, 0.6, 8]} />
         <meshStandardMaterial color="#1E293B" roughness={0.7} />
@@ -55,47 +48,54 @@ function Pedestrian({ initialPos, speed, color = '#2874F0' }) {
 }
 
 export function FlipkartBuilding() {
+  const neonGlowRef = useRef();
+
+  useFrame((state) => {
+    if (neonGlowRef.current) {
+      const pulse = 1.0 + Math.sin(state.clock.getElapsedTime() * 3.0) * 0.15;
+      neonGlowRef.current.intensity = pulse * 2.2;
+    }
+  });
+
   return (
     <group position={[0, 0, 0]}>
-      {/* ================= MAIN MALL BUILDING (BRIGHT LUXURY ARCHITECTURE) ================= */}
-      {/* Central High-Rise Tower (Floors 0 - 3) in Bright White Composite */}
+      {/* ================= 1. MONOLITHIC FUTURISTIC TOWER (CHARCOAL & DEEP NAVY) ================= */}
       <mesh position={[0, 9, -8]} castShadow receiveShadow>
         <boxGeometry args={[18, 18, 12]} />
-        <meshStandardMaterial color="#FFFFFF" metalness={0.15} roughness={0.2} />
+        <meshStandardMaterial color="#0B0F19" metalness={0.8} roughness={0.25} />
       </mesh>
 
-      {/* Blue & White Architectural Accent Slabs */}
-      {/* White Modern Upper Shell */}
+      {/* Roof Parapet Crown with Cyan LED Perimeter */}
       <mesh position={[0, 18.2, -8]}>
         <boxGeometry args={[18.6, 0.6, 12.6]} />
-        <meshStandardMaterial color="#FFFFFF" metalness={0.3} roughness={0.15} />
+        <meshStandardMaterial color="#111827" metalness={0.9} roughness={0.2} />
+      </mesh>
+      <mesh position={[0, 18.52, -1.9]}>
+        <boxGeometry args={[18.7, 0.08, 0.2]} />
+        <meshBasicMaterial color="#00F0FF" />
       </mesh>
 
-      {/* Flipkart Blue Crown Header Band */}
+      {/* Futuristic Flipkart Crown Band */}
       <mesh position={[0, 17.2, -1.9]}>
         <boxGeometry args={[18.4, 1.6, 0.4]} />
-        <meshStandardMaterial
-          color="#2874F0"
-          emissive="#2874F0"
-          emissiveIntensity={0.2}
-          metalness={0.4}
-        />
+        <meshStandardMaterial color="#0F172A" metalness={0.85} roughness={0.2} />
       </mesh>
 
-      {/* Giant 3D Flipkart Mall Sign on Crown */}
+      {/* Giant Illuminated 3D Flipkart 3D Mall Header */}
       <group position={[0, 17.2, -1.65]}>
         <Text
-          fontSize={1.05}
-          color="#FFFFFF"
+          fontSize={1.15}
+          color="#00F0FF"
           anchorX="center"
           anchorY="middle"
           fontWeight={900}
+          letterSpacing={0.06}
         >
-          Flipkart
+          FLIPKART
         </Text>
         <Text
-          position={[3.0, 0.05, 0]}
-          fontSize={0.85}
+          position={[3.5, 0.02, 0]}
+          fontSize={0.95}
           color="#FFE500"
           anchorX="center"
           anchorY="middle"
@@ -105,41 +105,35 @@ export function FlipkartBuilding() {
         </Text>
       </group>
 
-      {/* Illuminated Floor Divisions with Horizontal Blue Ribbons */}
+      {/* Illuminated Horizontal Floor Slabs with Electric Cyan LED Strips */}
       {[4.5, 8.5, 12.5, 16.5].map((y, idx) => (
         <group key={idx}>
-          {/* White Architectural Floor Slab */}
           <mesh position={[0, y, -2.0]}>
             <boxGeometry args={[18.4, 0.4, 0.3]} />
-            <meshStandardMaterial color="#F8FAFC" roughness={0.15} />
+            <meshStandardMaterial color="#1E293B" metalness={0.8} roughness={0.3} />
           </mesh>
-          {/* Blue LED Light Strip */}
-          <mesh position={[0, y - 0.25, -1.8]}>
-            <boxGeometry args={[18.2, 0.1, 0.05]} />
-            <meshStandardMaterial
-              color="#2874F0"
-              emissive="#2874F0"
-              emissiveIntensity={0.8}
-            />
+          <mesh position={[0, y - 0.22, -1.8]}>
+            <boxGeometry args={[18.3, 0.08, 0.06]} />
+            <meshBasicMaterial color="#00F0FF" />
           </mesh>
         </group>
       ))}
 
-      {/* Transparent Crystal Glass Curtain Facade (Reflective Sky-Blue Windows) */}
+      {/* Tinted Panoramic Curtain Glass Facade with Interior Glow */}
       <mesh position={[0, 9.5, -2.05]}>
         <planeGeometry args={[17.8, 14.5]} />
         <meshPhysicalMaterial
-          color="#BAE6FD"
-          transmission={0.8}
+          color="#0284C7"
+          transmission={0.85}
           transparent
-          opacity={0.4}
-          roughness={0.05}
-          metalness={0.15}
+          opacity={0.35}
+          roughness={0.08}
+          metalness={0.2}
           clearcoat={1.0}
         />
       </mesh>
 
-      {/* Interior Store Lights visible through glass */}
+      {/* Interior Department Store Lights visible through glass */}
       {[
         [-5, 6, -6], [0, 6, -6], [5, 6, -6],
         [-5, 10, -6], [0, 10, -6], [5, 10, -6],
@@ -148,157 +142,134 @@ export function FlipkartBuilding() {
         <pointLight
           key={idx}
           position={pos}
-          intensity={1.2}
+          intensity={1.4}
           distance={8}
-          color="#FFFFFF"
+          color="#38BDF8"
         />
       ))}
 
-      {/* ================= GRAND ENTRANCE CANOPY & NEON PORTAL ================= */}
-      {/* Floating Modern White Canopy Roof */}
+      {/* ================= 2. GRAND ENTRANCE CANOPY & NEON CYAN PORTAL ================= */}
+      {/* Floating Dark Charcoal Canopy Roof */}
       <mesh position={[0, 3.4, 0.8]} castShadow>
-        <boxGeometry args={[8.5, 0.35, 4.5]} />
-        <meshStandardMaterial color="#FFFFFF" metalness={0.2} roughness={0.15} />
-      </mesh>
-      {/* Glowing Flipkart Yellow Underside Edge Strip */}
-      <mesh position={[0, 3.2, 3.0]}>
-        <boxGeometry args={[8.4, 0.08, 0.08]} />
-        <meshStandardMaterial
-          color="#FFE500"
-          emissive="#FFE500"
-          emissiveIntensity={0.9}
-        />
+        <boxGeometry args={[8.8, 0.35, 4.5]} />
+        <meshStandardMaterial color="#0B132B" metalness={0.85} roughness={0.2} />
       </mesh>
 
-      {/* Futuristic Glowing Neon Cyan FLIPKART Canopy Sign (Matching Reference Video 2 Frame 01) */}
-      <group position={[0, 4.25, 1.2]}>
-        {/* Dark Modern Shield Backing */}
+      {/* Glowing Cyan Underside Perimeter Light Band */}
+      <mesh position={[0, 3.2, 3.0]}>
+        <boxGeometry args={[8.7, 0.08, 0.08]} />
+        <meshBasicMaterial color="#00F0FF" />
+      </mesh>
+
+      {/* Neon Cyan Canopy Signboard (Video Reference 2) */}
+      <group position={[0, 4.3, 1.2]}>
         <mesh>
-          <boxGeometry args={[4.6, 1.05, 0.12]} />
-          <meshStandardMaterial color="#0B192C" metalness={0.9} roughness={0.15} />
+          <boxGeometry args={[5.2, 1.1, 0.15]} />
+          <meshStandardMaterial color="#070B14" metalness={0.9} roughness={0.15} />
         </mesh>
-        {/* Cyan Glowing Outer Trim */}
-        <mesh position={[0, 0, 0.065]}>
-          <boxGeometry args={[4.52, 0.98, 0.02]} />
-          <meshBasicMaterial color="#38BDF8" wireframe />
+        <mesh position={[0, 0, 0.08]}>
+          <boxGeometry args={[5.1, 1.0, 0.02]} />
+          <meshBasicMaterial color="#00F0FF" wireframe />
         </mesh>
-        {/* Vivid Neon Cyan 3D Text */}
         <Text
-          position={[0, 0, 0.08]}
-          fontSize={0.52}
-          color="#38BDF8"
+          position={[0, 0, 0.1]}
+          fontSize={0.58}
+          color="#00F0FF"
           anchorX="center"
           anchorY="middle"
           fontWeight={900}
-          letterSpacing={0.14}
+          letterSpacing={0.16}
         >
           FLIPKART
         </Text>
       </group>
 
-      {/* Two Cylindrical Architectural Support Columns in Flipkart Blue */}
+      {/* Cyan Canopy Downlight casting glowing reflection onto plaza */}
+      <spotLight
+        ref={neonGlowRef}
+        position={[0, 3.3, 1.2]}
+        target-position={[0, 0, 1.2]}
+        intensity={2.2}
+        distance={7}
+        angle={Math.PI / 3}
+        color="#00F0FF"
+      />
+
+      {/* Dual Architectural Support Pillars in Titanium Navy with Cyan Slits */}
       {[-3.8, 3.8].map((x, idx) => (
-        <mesh key={idx} position={[x, 1.6, 2.5]} castShadow>
-          <cylinderGeometry args={[0.2, 0.2, 3.2, 24]} />
-          <meshStandardMaterial color="#2874F0" metalness={0.6} roughness={0.2} />
-        </mesh>
+        <group key={idx} position={[x, 1.6, 2.5]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.22, 0.22, 3.2, 24]} />
+            <meshStandardMaterial color="#1E293B" metalness={0.9} roughness={0.15} />
+          </mesh>
+          <mesh position={[0, 0, 0.2]}>
+            <boxGeometry args={[0.04, 3.1, 0.04]} />
+            <meshBasicMaterial color="#00F0FF" />
+          </mesh>
+        </group>
       ))}
 
       {/* Entrance Door Archway with Automatic Sliding Glass Doors */}
       <AutomaticDoors position={[0, 1.4, -1.9]} />
 
-      {/* Store Entrance Signboard */}
-      <group position={[0, 3.1, -1.75]}>
+      {/* Store Entrance Welcome Header Sign */}
+      <group position={[0, 3.08, -1.75]}>
         <mesh>
-          <boxGeometry args={[4.2, 0.65, 0.1]} />
-          <meshStandardMaterial color="#0053C2" />
+          <boxGeometry args={[4.4, 0.6, 0.1]} />
+          <meshStandardMaterial color="#0F172A" metalness={0.9} roughness={0.2} />
         </mesh>
         <Text
           position={[0, 0, 0.06]}
-          fontSize={0.28}
-          color="#FFFFFF"
+          fontSize={0.24}
+          color="#00F0FF"
           anchorX="center"
           anchorY="middle"
           fontWeight={900}
+          letterSpacing={0.06}
         >
-          WELCOME TO FLIPKART 3D
+          WELCOME TO FLIPKART 3D MALL
         </Text>
       </group>
 
-      {/* ================= OUTDOOR SUNLIT PLAZA & ENVIRONMENT ================= */}
-      {/* Main Plaza Ground (Bright Travertine / White Granite Tiles) */}
+      {/* ================= 3. REFLECTIVE TWILIGHT PLAZA GROUND ================= */}
+      {/* High-Gloss Mirror Paving reflecting the neon cyan sign */}
       <mesh position={[0, -0.05, 5]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[40, 30]} />
+        <planeGeometry args={[42, 32]} />
         <meshStandardMaterial
-          color="#EEF2F7"
-          roughness={0.25}
-          metalness={0.1}
+          color="#070B14"
+          roughness={0.08}
+          metalness={0.65}
         />
       </mesh>
 
-      {/* Blue LED Plaza Guide Runway Strip leading into doors */}
+      {/* Glowing Cyan Runway Guide Strips leading directly to the doors */}
       {[-1.8, 1.8].map((x, idx) => (
         <mesh key={idx} position={[x, 0.01, 7]} rotation={[-Math.PI / 2, 0, 0]}>
           <planeGeometry args={[0.15, 14]} />
-          <meshBasicMaterial color="#2874F0" />
+          <meshBasicMaterial color="#00F0FF" />
         </mesh>
       ))}
 
-      {/* Plaza Modern Planter Boxes with Lush Greenery */}
-      {[-5.5, 5.5].map((x, idx) => (
+      {/* Illuminated Planter Boxes */}
+      {[-5.8, 5.8].map((x, idx) => (
         <group key={idx} position={[x, 0, 4]}>
-          {/* Concrete Base Box in Clean White */}
           <mesh position={[0, 0.4, 0]} castShadow>
             <boxGeometry args={[1.4, 0.8, 4.0]} />
-            <meshStandardMaterial color="#FFFFFF" roughness={0.4} />
+            <meshStandardMaterial color="#1E293B" roughness={0.3} metalness={0.7} />
           </mesh>
-          {/* Glowing Blue Base Trim */}
           <mesh position={[0, 0.05, 0]}>
             <boxGeometry args={[1.44, 0.1, 4.04]} />
-            <meshBasicMaterial color="#2874F0" />
+            <meshBasicMaterial color="#00F0FF" />
           </mesh>
-          {/* Stylized Shrub Foliage */}
-          {[-1.2, 0, 1.2].map((z, jdx) => (
-            <mesh key={jdx} position={[0, 1.0, z]} castShadow>
-              <sphereGeometry args={[0.45, 16, 16]} />
-              <meshStandardMaterial color="#10B981" roughness={0.7} />
-            </mesh>
-          ))}
         </group>
       ))}
 
-      {/* Plaza Architectural Lamp Posts with Soft Daylight Light */}
-      {[
-        [-7, 0, 8],
-        [7, 0, 8],
-        [-7, 0, 14],
-        [7, 0, 14]
-      ].map((pos, idx) => (
-        <group key={idx} position={pos}>
-          {/* Pole */}
-          <mesh position={[0, 2.2, 0]}>
-            <cylinderGeometry args={[0.06, 0.08, 4.4, 16]} />
-            <meshStandardMaterial color="#CBD5E1" metalness={0.8} />
-          </mesh>
-          {/* Lamp Head */}
-          <mesh position={[pos[0] > 0 ? -0.3 : 0.3, 4.3, 0]}>
-            <boxGeometry args={[0.7, 0.12, 0.3]} />
-            <meshStandardMaterial color="#0284C7" metalness={0.9} />
-          </mesh>
-          <pointLight
-            position={[pos[0] > 0 ? -0.3 : 0.3, 4.1, 0]}
-            intensity={0.6}
-            distance={8}
-            color="#FFFFFF"
-          />
-        </group>
-      ))}
-
-      {/* Animated Stylized Pedestrians in Summer Apparel Walking into Mall */}
-      <Pedestrian initialPos={[-1.2, 0, 12]} speed={1.2} color="#0284C7" />
-      <Pedestrian initialPos={[0.8, 0, 15]} speed={1.0} color="#EC4899" />
-      <Pedestrian initialPos={[-0.4, 0, 18]} speed={1.4} color="#10B981" />
-      <Pedestrian initialPos={[1.5, 0, 20]} speed={0.9} color="#F59E0B" />
+      {/* Moving Pedestrians */}
+      <Pedestrian initialPos={[-1.2, 0, 11]} speed={1.1} color="#00F0FF" />
+      <Pedestrian initialPos={[1.4, 0, 14]} speed={0.9} color="#2874F0" />
+      <Pedestrian initialPos={[-0.4, 0, 8]} speed={1.3} color="#FFE500" />
     </group>
   );
 }
+
+export default FlipkartBuilding;

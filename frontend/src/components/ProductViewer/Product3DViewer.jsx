@@ -218,35 +218,35 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
   };
 
   return (
-    <div className={`relative w-full h-full bg-[#F5F8FE] ${className}`}>
+    <div className={`relative w-full h-full bg-[#070B14] ${className}`}>
       <Canvas
         camera={{ position: [0, 0, 3.2], fov: 45 }}
         gl={{
           antialias: true,
           alpha: false,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.18
+          toneMappingExposure: 1.25
         }}
         dpr={[1, 2]}
       >
-        <color attach="background" args={['#F5F8FE']} />
+        <color attach="background" args={['#070B14']} />
 
-        {/* Daylight Studio Lighting with Soft Contrast */}
-        <hemisphereLight skyColor="#FFFFFF" groundColor="#E2E8F0" intensity={1.15} />
-        <ambientLight intensity={0.6} color="#FFFFFF" />
+        {/* Studio Lighting with High Contrast */}
+        <hemisphereLight skyColor="#1E3A8A" groundColor="#070B14" intensity={1.3} />
+        <ambientLight intensity={0.7} color="#FFFFFF" />
 
         {/* Primary Key Light */}
         <directionalLight
           position={[6, 9, 6]}
-          intensity={1.8}
+          intensity={2.0}
           castShadow
           shadow-mapSize={[1024, 1024]}
           color="#FFFFFF"
         />
-        {/* Soft Sky Blue Rim Light */}
-        <directionalLight position={[-6, 5, -6]} intensity={0.65} color="#BAE6FD" />
-        {/* Under-Bounce Ground Light */}
-        <directionalLight position={[0, -4, 4]} intensity={0.35} color="#FFFFFF" />
+        {/* Soft Electric Cyan Rim Light */}
+        <directionalLight position={[-6, 5, -6]} intensity={0.9} color="#00F0FF" />
+        {/* Royal Blue Under-Bounce Ground Light */}
+        <directionalLight position={[0, -4, 4]} intensity={0.45} color="#2874F0" />
 
         <ProductViewerScene
           modelType={modelType}
@@ -274,32 +274,32 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
 
       {/* Floating Holographic Exploded Component Card (Section 9 & 10) */}
       {isExplodedView && activeCompData && (
-        <div className="absolute top-6 left-6 max-w-sm bg-white/95 backdrop-blur-xl border border-blue-200/90 rounded-2xl p-4 shadow-2xl z-20 transition-all animate-in fade-in slide-in-from-top-2">
-          <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2 mb-2">
-            <span className="text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full bg-blue-50 text-flipkart-blue border border-blue-200">
+        <div className="absolute top-6 left-6 max-w-sm bg-[#0F172A]/95 backdrop-blur-xl border border-cyan-500/50 rounded-2xl p-4 shadow-2xl z-20 transition-all animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 mb-2">
+            <span className="text-[10px] font-black tracking-wider uppercase px-2 py-0.5 rounded-full bg-cyan-950/80 text-cyan-400 border border-cyan-500/50 shadow-glow-blue">
               {activeCompData.badge}
             </span>
             <button
               onClick={() => setSelectedExplodedComponent(null)}
-              className="text-slate-400 hover:text-slate-700 p-0.5 rounded-md"
+              className="text-slate-400 hover:text-white p-0.5 rounded-md"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-          <h4 className="font-extrabold text-sm text-[#172B4D] mb-1">{activeCompData.title}</h4>
-          <p className="text-xs text-slate-600 leading-relaxed">{activeCompData.desc}</p>
+          <h4 className="font-extrabold text-sm text-white mb-1">{activeCompData.title}</h4>
+          <p className="text-xs text-slate-300 leading-relaxed">{activeCompData.desc}</p>
         </div>
       )}
 
       {/* Exploded View Control Bar (When Phone is Active) */}
       {isPhone && (
-        <div className="absolute top-6 right-6 flex items-center gap-2 bg-white/95 backdrop-blur-xl p-2 rounded-2xl shadow-xl border border-slate-200 z-10">
+        <div className="absolute top-6 right-6 flex items-center gap-2 bg-[#0F172A]/90 backdrop-blur-xl p-2 rounded-2xl shadow-xl border border-slate-700/80 z-10">
           <button
             onClick={toggleExplodedView}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
               isExplodedView
-                ? 'bg-flipkart-blue text-white shadow-glow-blue'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-glow-blue'
+                : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
             }`}
           >
             <Layers className="w-4 h-4" />
@@ -307,8 +307,8 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
           </button>
 
           {isExplodedView && (
-            <div className="flex items-center gap-2 px-2 border-l border-slate-200">
-              <span className="text-[11px] font-bold text-slate-500">Spread:</span>
+            <div className="flex items-center gap-2 px-2 border-l border-slate-700">
+              <span className="text-[11px] font-bold text-slate-300">Spread:</span>
               <input
                 type="range"
                 min="0.1"
@@ -316,9 +316,9 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
                 step="0.05"
                 value={explosionProgress}
                 onChange={(e) => setExplosionProgress(parseFloat(e.target.value))}
-                className="w-24 h-1.5 accent-flipkart-blue rounded-lg cursor-pointer"
+                className="w-24 h-1.5 accent-cyan-400 rounded-lg cursor-pointer"
               />
-              <span className="text-[10px] font-mono text-slate-500 w-8">
+              <span className="text-[10px] font-mono text-cyan-300 w-8">
                 {Math.round(explosionProgress * 100)}%
               </span>
             </div>
@@ -326,14 +326,14 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
         </div>
       )}
 
-      {/* Floating 360° Inspection Toolbar (Light Theme Glassmorphic HUD) */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-white/90 backdrop-blur-xl p-1.5 rounded-2xl shadow-glass-light pointer-events-auto border border-slate-200 z-10">
+      {/* Floating 360° Inspection Toolbar (Cyber-Glass Theme) */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-[#0F172A]/90 backdrop-blur-xl p-1.5 rounded-2xl shadow-2xl pointer-events-auto border border-slate-700/80 z-10">
         <button
           onClick={() => setAutoRotate(!autoRotate)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
             autoRotate && !isExplodedView
-              ? 'bg-flipkart-blue text-white shadow-glow-blue'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-glow-blue'
+              : 'text-slate-300 hover:text-white hover:bg-slate-800'
           }`}
           title="Toggle 360 Auto-Rotate"
         >
@@ -341,11 +341,11 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
           <span>360° Auto</span>
         </button>
 
-        <div className="w-[1px] h-4 bg-slate-200 mx-1" />
+        <div className="w-[1px] h-4 bg-slate-700 mx-1" />
 
         <button
           onClick={() => setCameraAngle(0, Math.PI / 2)}
-          className="px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+          className="px-2.5 py-1.5 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
           title="Front View"
         >
           Front
@@ -353,7 +353,7 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
 
         <button
           onClick={() => setCameraAngle(Math.PI, Math.PI / 2)}
-          className="px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+          className="px-2.5 py-1.5 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
           title="Back View"
         >
           Back
@@ -361,7 +361,7 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
 
         <button
           onClick={() => setCameraAngle(Math.PI / 2, Math.PI / 2)}
-          className="px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+          className="px-2.5 py-1.5 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
           title="Side View"
         >
           Side
@@ -369,7 +369,7 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
 
         <button
           onClick={() => setCameraAngle(0, 0.2)}
-          className="px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+          className="px-2.5 py-1.5 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
           title="Top View"
         >
           Top
@@ -377,18 +377,18 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
 
         <button
           onClick={() => setCameraAngle(Math.PI / 4, Math.PI / 3)}
-          className="px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all flex items-center gap-1"
+          className="px-2.5 py-1.5 text-xs font-bold text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-all flex items-center gap-1"
           title="Isometric Hero View"
         >
-          <Compass className="w-3 h-3 text-flipkart-blue" />
+          <Compass className="w-3 h-3 text-cyan-400" />
           <span>45°</span>
         </button>
 
-        <div className="w-[1px] h-4 bg-slate-200 mx-1" />
+        <div className="w-[1px] h-4 bg-slate-700 mx-1" />
 
         <button
           onClick={handleResetCamera}
-          className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+          className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
           title="Reset Camera Angle"
         >
           <RefreshCw className="w-3.5 h-3.5" />

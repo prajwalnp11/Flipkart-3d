@@ -292,9 +292,57 @@ export const useExperienceStore = create((set, get) => ({
     }
   },
 
-  // Quick Jump from Floor HUD
+  // Quick Jump from Floor HUD (Cinematic elevator travel)
   quickJumpToFloor: (floorNum) => {
     get().travelToFloor(floorNum);
+  },
+
+  // Instant Teleport to Floor (0ms delay for UI Shortcuts & Direct Jump)
+  instantJumpToFloor: (floorNum) => {
+    if (get()._currentCinematicTimer) {
+      clearTimeout(get()._currentCinematicTimer);
+    }
+    sounds.playClick();
+    sounds.playElevatorDing();
+    const displayMap = { 0: 'G', 1: '1F', 2: '2F', 3: '3F' };
+    set({
+      currentFloor: floorNum,
+      selectedFloor: floorNum,
+      targetFloor: floorNum,
+      phase: floorNum === 0 ? 'lobby' : 'showroom',
+      currentView: floorNum === 0 ? 'GROUND_LOBBY' : 'SHOWROOM',
+      doorOpen: false,
+      cameraLock: false,
+      elevatorMoving: false,
+      elevatorDoorOpen: false,
+      selectedBrand: null,
+      elevatorFloorDisplay: displayMap[floorNum] || `${floorNum}F`
+    });
+    get().addToast('Teleported', `Arrived at ${displayMap[floorNum] || floorNum} Floor`, 'success');
+  },
+
+  // Instant Teleport to Brand Boutique on Floor 1
+  instantJumpToBrand: (brandSlug) => {
+    if (get()._currentCinematicTimer) {
+      clearTimeout(get()._currentCinematicTimer);
+    }
+    sounds.playClick();
+    sounds.playDoorOpen();
+    set({
+      currentFloor: 1,
+      selectedFloor: 1,
+      targetFloor: 1,
+      phase: 'showroom',
+      currentView: 'SHOWROOM',
+      selectedBrand: brandSlug,
+      doorOpen: false,
+      brandDoorOpen: false,
+      cameraLock: false,
+      elevatorMoving: false,
+      elevatorDoorOpen: false,
+      elevatorFloorDisplay: '1F'
+    });
+    get().addToast('Brand Boutique', `Entered the official ${brandSlug.toUpperCase()} Storefront`, 'success');
   },
 
   // 4. Open 3D Product Inspector (Phase: inspecting)

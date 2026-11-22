@@ -53,6 +53,7 @@ function ToastContainer() {
 export function App() {
   const initData = useStore((state) => state.initData);
   const quickJumpToFloor = useStore((state) => state.quickJumpToFloor);
+  const instantJumpToFloor = useStore((state) => state.instantJumpToFloor);
   const closeProductInspect = useStore((state) => state.closeProductInspect);
   const selectedProduct = useStore((state) => state.selectedProduct);
   const toggleMute = useStore((state) => state.toggleMute);
@@ -73,16 +74,16 @@ export function App() {
       switch (e.key) {
         case '0':
         case '`':
-          quickJumpToFloor(0);
+          instantJumpToFloor(0);
           break;
         case '1':
-          quickJumpToFloor(1);
+          instantJumpToFloor(1);
           break;
         case '2':
-          quickJumpToFloor(2);
+          instantJumpToFloor(2);
           break;
         case '3':
-          quickJumpToFloor(3);
+          instantJumpToFloor(3);
           break;
         case 'Escape':
           if (selectedProduct) closeProductInspect();
@@ -116,10 +117,10 @@ export function App() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedProduct, quickJumpToFloor, closeProductInspect, toggleMute, toggleClassicView, toggleCart]);
+  }, [selectedProduct, quickJumpToFloor, instantJumpToFloor, closeProductInspect, toggleMute, toggleClassicView, toggleCart]);
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden bg-[#F5F8FE] text-navy-dark select-none">
+    <div className="relative w-screen h-screen overflow-hidden bg-[#070B14] text-white select-none">
       {/* Persistent Single 3D Shopping Mall Canvas */}
       <MallScene />
 

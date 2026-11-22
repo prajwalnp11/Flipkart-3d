@@ -11,41 +11,42 @@
 
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-    background-color: #F5F8FE;
-    color: #172B4D;
+    background-color: #070B14;
+    color: #FFFFFF;
     user-select: none;
     -webkit-user-select: none;
+    overflow: hidden;
   }
 }
 
-/* Light Theme Glassmorphism & Cards */
+/* Futuristic Cyber-Glass UI Panels & Shadows */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 240, 255, 0.1);
 }
 
 .glass-panel-glow {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(40, 116, 240, 0.25);
-  box-shadow: 0 10px 40px rgba(40, 116, 240, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(0, 240, 255, 0.45);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 240, 255, 0.2);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(216, 226, 236, 0.8);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
 }
 
 .glass-button {
-  background: linear-gradient(135deg, #2874F0 0%, #0053C2 100%);
-  box-shadow: 0 4px 20px rgba(40, 116, 240, 0.35);
+  background: linear-gradient(135deg, #2874F0 0%, #00F0FF 100%);
+  box-shadow: 0 4px 25px rgba(0, 240, 255, 0.4);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

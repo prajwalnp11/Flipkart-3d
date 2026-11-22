@@ -54,9 +54,9 @@ function CameraRig() {
       targetLookAt.current.set(0, 5.2, -2);
       elevatorCurrentY.current = 0;
     } else if (isEnteringPhase) {
-      // Smooth cinematic glide through the entrance doors into the ground floor lobby
-      targetCamPos.current.set(0, 2.6, 10.5);
-      targetLookAt.current.set(0, 1.4, 0);
+      // Smooth cinematic glide into the ground floor grand atrium with upward gaze
+      targetCamPos.current.set(0, 2.4, 12.0);
+      targetLookAt.current.set(0, 6.5, -1.0);
       elevatorCurrentY.current = 0;
     } else if (isToElevatorPhase) {
       // Camera smoothly moves towards the glass elevator entrance at current floor
@@ -92,8 +92,9 @@ function CameraRig() {
       targetCamPos.current.set(0, currentFloorY + 1.8, 4.8);
       targetLookAt.current.set(0, currentFloorY + 1.05, 0);
     } else if (isLobbyPhase) {
-      targetCamPos.current.set(0, 2.6, 10.5);
-      targetLookAt.current.set(0, 1.4, 0);
+      // Grand Atrium perspective looking up into the 4-floor void (Section 3)
+      targetCamPos.current.set(0, 2.4, 12.0);
+      targetLookAt.current.set(0, 6.5, -1.0);
       elevatorCurrentY.current = 0;
     } else {
       // Standard Floor View
@@ -165,49 +166,56 @@ export function MallScene() {
   const shadowsEnabled = quality !== 'low';
 
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#F5F8FE]">
+    <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#070B14]">
       <Canvas
         camera={{ position: [0, 3.6, 18], fov: 50 }}
         gl={{
           antialias: true,
           alpha: false,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.15
+          toneMappingExposure: 1.25
         }}
         dpr={dpr}
       >
-        {/* Bright daylight sky background and soft atmospheric fog */}
-        <color attach="background" args={['#F5F8FE']} />
-        <fog attach="fog" args={['#F5F8FE', 24, 75]} />
+        {/* Futuristic Twilight Sky Background & Atmospheric Depth Fog (Section 17) */}
+        <color attach="background" args={['#070B14']} />
+        <fog attach="fog" args={['#070B14', 28, 85]} />
 
-        {/* Natural Daylight Hemisphere Lighting */}
+        {/* Ambient & Hemisphere Lighting - Deep Indigo Sky + Cool Floor Ambient */}
         <hemisphereLight
-          skyColor="#FFFFFF"
-          groundColor="#DCE8FA"
-          intensity={1.15}
+          skyColor="#1E3A8A"
+          groundColor="#0B0F19"
+          intensity={1.25}
         />
 
-        {/* Ambient base fill light */}
-        <ambientLight intensity={0.55} color="#FFFFFF" />
+        {/* Soft Ambient Fill */}
+        <ambientLight intensity={0.65} color="#E0F2FE" />
 
-        {/* Primary Sunlight (Directional with soft shadows) */}
+        {/* Primary Key Spotlight / Directional Light with Soft Shadows */}
         <directionalLight
           position={[14, 28, 14]}
-          intensity={1.5}
+          intensity={1.65}
           castShadow={shadowsEnabled}
           shadow-mapSize={shadowMapSize}
           shadow-bias={-0.0001}
           color="#FFFFFF"
         />
 
-        {/* Secondary Sky Reflection Fill Light */}
+        {/* Electric Cyan Architectural Edge Accent Light */}
         <directionalLight
-          position={[-12, 18, -10]}
-          intensity={0.45}
-          color="#EAF3FF"
+          position={[-14, 16, -8]}
+          intensity={0.85}
+          color="#00F0FF"
         />
 
-        {/* 1. Exterior Building Scene */}
+        {/* Deep Royal Blue Backstage Fill Light */}
+        <directionalLight
+          position={[0, -10, 15]}
+          intensity={0.4}
+          color="#1D4ED8"
+        />
+
+        {/* 1. Exterior Building Scene (Futuristic Mall Plaza) */}
         {isExterior && <FlipkartBuilding />}
 
         {/* 2. Grand Interior Shopping Mall Architecture (Multi-Storey Open Atrium) */}
