@@ -4,17 +4,10 @@ import { Text, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStore } from '../../store/useStore';
 import { AutomaticStoreDoors } from '../Entrance/AutomaticStoreDoors';
-import { SmartphoneModel } from '../ProductViewer/Models3D/SmartphoneModel';
-import { LaptopModel } from '../ProductViewer/Models3D/LaptopModel';
-import { SmartwatchModel } from '../ProductViewer/Models3D/SmartwatchModel';
-import { HeadphonesModel } from '../ProductViewer/Models3D/HeadphonesModel';
-import { SpeakerModel } from '../ProductViewer/Models3D/SpeakerModel';
-import { EarbudsModel } from '../ProductViewer/Models3D/EarbudsModel';
-import { CameraModel } from '../ProductViewer/Models3D/CameraModel';
-import { TabletModel } from '../ProductViewer/Models3D/TabletModel';
+import { DynamicProductModel } from '../ProductViewer/DynamicProductModel';
 
 // Interactive Product Table / Display Counter in the Showroom
-function InteractiveDisplayItem({ product, position, rotation = [0, 0, 0], scale = 0.55, children, label, brand, price }) {
+function InteractiveDisplayItem({ product, position, rotation = [0, 0, 0], scale = 0.55, children, label, brand, price, fallbackColor }) {
   const [hovered, setHovered] = useState(false);
   const openProductInspect = useStore((state) => state.openProductInspect);
   const haloRef = useRef();
@@ -45,7 +38,14 @@ function InteractiveDisplayItem({ product, position, rotation = [0, 0, 0], scale
     >
       {/* 3D Product Geometry on Stand */}
       <group scale={scale} position={[0, 0.45, 0]}>
-        {children}
+        {children || (
+          <DynamicProductModel
+            product={product}
+            fallbackColor={fallbackColor || '#2874F0'}
+            standMode
+            isHovered={hovered}
+          />
+        )}
       </group>
 
       {/* Tilted Acrylic Display Stand */}
@@ -448,22 +448,26 @@ export function ElectronicsShowroom({ floorY = 8 }) {
 
             {/* Display Products of this Brand */}
             {currentBrandConfig.products.length > 0 ? (
-              currentBrandConfig.products.slice(0, 3).map((prod, idx) => {
-                const posX = (idx - (Math.min(currentBrandConfig.products.length, 3) - 1) / 2) * 2.2;
-                return (
-                  <InteractiveDisplayItem
-                    key={prod.id || prod.slug}
-                    product={prod}
-                    position={[posX, 0.9, 0]}
-                    label={prod.name}
-                    brand={prod.brand}
-                    price={`₹${Number(prod.price).toLocaleString('en-IN')}`}
-                    scale={0.52}
-                  >
-                    <SmartphoneModel color={prod.model_3d?.color_options?.[0]?.hex || currentBrandConfig.accentColor} />
-                  </InteractiveDisplayItem>
-                );
-              })
+              (() => {
+                const displayProducts = currentBrandConfig.products.slice(0, Math.min(currentBrandConfig.products.length, 4));
+                const count = displayProducts.length;
+                const spacing = count > 3 ? 1.7 : 2.2;
+                return displayProducts.map((prod, idx) => {
+                  const posX = (idx - (count - 1) / 2) * spacing;
+                  return (
+                    <InteractiveDisplayItem
+                      key={prod.id || prod.slug}
+                      product={prod}
+                      position={[posX, 0.9, 0]}
+                      label={prod.name}
+                      brand={prod.brand}
+                      price={`₹${Number(prod.price).toLocaleString('en-IN')}`}
+                      scale={0.52}
+                      fallbackColor={currentBrandConfig.accentColor}
+                    />
+                  );
+                });
+              })()
             ) : (
               <Text position={[0, 1.2, 0]} fontSize={0.25} color="#172B4D" fontWeight={900}>
                 Flagship Devices on Display

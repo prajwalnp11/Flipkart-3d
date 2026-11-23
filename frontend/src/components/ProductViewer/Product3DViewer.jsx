@@ -3,22 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, ContactShadows, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStore } from '../../store/useStore';
-import { SmartphoneModel } from './Models3D/SmartphoneModel';
-import { ExplodedSmartphoneModel } from './Models3D/ExplodedSmartphoneModel';
-import { LaptopModel } from './Models3D/LaptopModel';
-import { HeadphonesModel } from './Models3D/HeadphonesModel';
-import { SmartwatchModel } from './Models3D/SmartwatchModel';
-import { SneakerModel } from './Models3D/SneakerModel';
-import { SofaModel } from './Models3D/SofaModel';
-import { TelevisionModel } from './Models3D/TelevisionModel';
-import { RefrigeratorModel } from './Models3D/RefrigeratorModel';
-import { WashingMachineModel } from './Models3D/WashingMachineModel';
-import { CameraModel } from './Models3D/CameraModel';
-import { TabletModel } from './Models3D/TabletModel';
-import { SpeakerModel } from './Models3D/SpeakerModel';
-import { EarbudsModel } from './Models3D/EarbudsModel';
-import { MannequinModel } from './Models3D/MannequinModel';
-import { HandbagModel } from './Models3D/HandbagModel';
+import { DynamicProductModel, resolveModelType } from './DynamicProductModel';
 import { ProductHotspots } from './ProductHotspots';
 import { RotateCw, RefreshCw, Compass, Layers, Check, Info, X } from 'lucide-react';
 
@@ -71,66 +56,13 @@ const EXPLODED_COMPONENT_SPECS = {
 };
 
 function DynamicProductMesh({ modelType, color, isExploded }) {
-  const isPhone = ['smartphone', 'phone', 'mobile'].includes(modelType?.toLowerCase());
-
-  if (isPhone && isExploded) {
-    return <ExplodedSmartphoneModel color={color} />;
-  }
-
-  switch (modelType?.toLowerCase()) {
-    case 'smartphone':
-    case 'phone':
-    case 'mobile':
-      return <SmartphoneModel color={color} />;
-    case 'laptop':
-    case 'computer':
-    case 'macbook':
-      return <LaptopModel color={color} />;
-    case 'tablet':
-    case 'ipad':
-      return <TabletModel color={color} />;
-    case 'headphones':
-    case 'headset':
-      return <HeadphonesModel color={color} />;
-    case 'smartwatch':
-    case 'watch':
-      return <SmartwatchModel color={color} />;
-    case 'shoe':
-    case 'sneaker':
-    case 'footwear':
-      return <SneakerModel color={color} />;
-    case 'sofa':
-    case 'couch':
-    case 'furniture':
-      return <SofaModel color={color} />;
-    case 'television':
-    case 'tv':
-      return <TelevisionModel color={color} />;
-    case 'refrigerator':
-    case 'fridge':
-      return <RefrigeratorModel color={color} />;
-    case 'washing_machine':
-    case 'washer':
-      return <WashingMachineModel color={color} />;
-    case 'camera':
-    case 'dslr':
-      return <CameraModel color={color} />;
-    case 'speaker':
-    case 'bluetooth_speaker':
-      return <SpeakerModel color={color} />;
-    case 'earbuds':
-    case 'airpods':
-      return <EarbudsModel color={color} />;
-    case 'mannequin':
-    case 'apparel':
-    case 'clothing':
-      return <MannequinModel color={color} />;
-    case 'handbag':
-    case 'bag':
-      return <HandbagModel color={color} />;
-    default:
-      return <SmartphoneModel color={color} />;
-  }
+  return (
+    <DynamicProductModel
+      modelType={modelType}
+      color={color}
+      isExploded={isExploded}
+    />
+  );
 }
 
 function ProductViewerScene({ modelType, color, features, isExploded }) {
@@ -196,7 +128,7 @@ export function Product3DViewer({ product: propProduct, className = '' }) {
   const controlsRef = useRef();
 
   const product = propProduct || storeProduct;
-  const modelType = product?.model_3d?.model_type || product?.model_3d_type || 'smartphone';
+  const modelType = resolveModelType(product);
   const color = inspectionColor || product?.model_3d?.color_options?.[0]?.hex || '#2874F0';
   const features = product?.features || [];
 

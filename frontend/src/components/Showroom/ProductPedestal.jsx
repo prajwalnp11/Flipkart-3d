@@ -3,15 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Text, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStore } from '../../store/useStore';
-import { SmartphoneModel } from '../ProductViewer/Models3D/SmartphoneModel';
-import { LaptopModel } from '../ProductViewer/Models3D/LaptopModel';
-import { HeadphonesModel } from '../ProductViewer/Models3D/HeadphonesModel';
-import { SmartwatchModel } from '../ProductViewer/Models3D/SmartwatchModel';
-import { SneakerModel } from '../ProductViewer/Models3D/SneakerModel';
-import { SofaModel } from '../ProductViewer/Models3D/SofaModel';
-import { TelevisionModel } from '../ProductViewer/Models3D/TelevisionModel';
-import { RefrigeratorModel } from '../ProductViewer/Models3D/RefrigeratorModel';
-import { WashingMachineModel } from '../ProductViewer/Models3D/WashingMachineModel';
+import { DynamicProductModel } from '../ProductViewer/DynamicProductModel';
 
 export function ProductPedestal({ product, position = [0, 0, 0] }) {
   const [hovered, setHovered] = useState(false);
@@ -24,74 +16,7 @@ export function ProductPedestal({ product, position = [0, 0, 0] }) {
     }
   });
 
-  const modelType = product.model_3d_type || 'smartphone';
   const displayPrice = `₹${Number(product.price).toLocaleString('en-IN')}`;
-
-  const renderProductModel = () => {
-    const scale = 0.55;
-    switch (modelType) {
-      case 'smartphone':
-        return (
-          <group scale={scale}>
-            <SmartphoneModel color="#C2A385" isHovered={hovered} />
-          </group>
-        );
-      case 'laptop':
-        return (
-          <group scale={scale * 0.9}>
-            <LaptopModel color="#1C1D1F" />
-          </group>
-        );
-      case 'headphones':
-        return (
-          <group scale={scale * 0.95}>
-            <HeadphonesModel color="#1B263B" />
-          </group>
-        );
-      case 'smartwatch':
-        return (
-          <group scale={scale * 1.1}>
-            <SmartwatchModel color="#B5AEA4" />
-          </group>
-        );
-      case 'shoe':
-        return (
-          <group scale={scale * 0.85}>
-            <SneakerModel color="#0090FF" />
-          </group>
-        );
-      case 'sofa':
-        return (
-          <group scale={scale * 0.65}>
-            <SofaModel color="#1E3A8A" />
-          </group>
-        );
-      case 'television':
-        return (
-          <group scale={scale * 0.6}>
-            <TelevisionModel color="#9CA3AF" />
-          </group>
-        );
-      case 'refrigerator':
-        return (
-          <group scale={scale * 0.55}>
-            <RefrigeratorModel color="#E2E8F0" />
-          </group>
-        );
-      case 'washing_machine':
-        return (
-          <group scale={scale * 0.58}>
-            <WashingMachineModel color="#F8FAFC" />
-          </group>
-        );
-      default:
-        return (
-          <group scale={scale}>
-            <SmartphoneModel color="#C2A385" />
-          </group>
-        );
-    }
-  };
 
   return (
     <group
@@ -140,7 +65,7 @@ export function ProductPedestal({ product, position = [0, 0, 0] }) {
       {/* 3D Product Rotating Gently on Pedestal */}
       <group position={[0, 1.48, 0]}>
         <Float speed={hovered ? 3 : 1.5} rotationIntensity={0.2} floatIntensity={0.15}>
-          {renderProductModel()}
+          <DynamicProductModel product={product} standMode isHovered={hovered} />
         </Float>
       </group>
 
