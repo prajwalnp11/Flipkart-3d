@@ -166,54 +166,66 @@ export function MallScene() {
   const shadowsEnabled = quality !== 'low';
 
   return (
-    <div className="absolute inset-0 w-full h-full overflow-hidden bg-[#070B14]">
+    <div className={`absolute inset-0 w-full h-full overflow-hidden ${isExterior ? 'bg-[#070B14]' : 'bg-[#F8FAFC]'}`}>
       <Canvas
-        camera={{ position: [0, 3.6, 18], fov: 50 }}
+        camera={{ position: [0, 3.6, 18], fov: 52 }}
         gl={{
           antialias: true,
           alpha: false,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.25
+          toneMappingExposure: 1.15
         }}
         dpr={dpr}
       >
-        {/* Futuristic Twilight Sky Background & Atmospheric Depth Fog (Section 17) */}
-        <color attach="background" args={['#070B14']} />
-        <fog attach="fog" args={['#070B14', 28, 85]} />
-
-        {/* Ambient & Hemisphere Lighting - Deep Indigo Sky + Cool Floor Ambient */}
-        <hemisphereLight
-          skyColor="#1E3A8A"
-          groundColor="#0B0F19"
-          intensity={1.25}
+        {/* Dynamic Architectural Sky Background & Atmospheric Fog */}
+        <color attach="background" args={[isExterior ? '#070B14' : '#F8FAFC']} />
+        <fog
+          attach="fog"
+          args={[
+            isExterior ? '#070B14' : '#F1F5F9',
+            isExterior ? 28 : 45,
+            isExterior ? 85 : 120
+          ]}
         />
 
-        {/* Soft Ambient Fill */}
-        <ambientLight intensity={0.65} color="#E0F2FE" />
+        {/* Balanced Architectural Daylight & Hemisphere Illumination */}
+        <hemisphereLight
+          skyColor={isExterior ? '#1E3A8A' : '#FFFFFF'}
+          groundColor={isExterior ? '#0B0F19' : '#F8FAFC'}
+          intensity={isExterior ? 1.25 : 1.45}
+        />
 
-        {/* Primary Key Spotlight / Directional Light with Soft Shadows */}
+        {/* Soft Ambient Daylight Fill */}
+        <ambientLight
+          intensity={isExterior ? 0.65 : 0.75}
+          color={isExterior ? '#E0F2FE' : '#FFFDF7'}
+        />
+
+        {/* Primary Natural Sunlight Streaming Through Skylight */}
         <directionalLight
-          position={[14, 28, 14]}
-          intensity={1.65}
+          position={isExterior ? [14, 28, 14] : [8, 36, 6]}
+          intensity={isExterior ? 1.65 : 2.2}
           castShadow={shadowsEnabled}
           shadow-mapSize={shadowMapSize}
           shadow-bias={-0.0001}
-          color="#FFFFFF"
+          color={isExterior ? '#FFFFFF' : '#FFFBF5'}
         />
 
-        {/* Electric Cyan Architectural Edge Accent Light */}
+        {/* Soft Sky-Blue Secondary Daylight Bounce */}
         <directionalLight
-          position={[-14, 16, -8]}
-          intensity={0.85}
-          color="#00F0FF"
+          position={[-10, 32, -6]}
+          intensity={isExterior ? 0.85 : 0.9}
+          color={isExterior ? '#00F0FF' : '#E0F2FE'}
         />
 
-        {/* Deep Royal Blue Backstage Fill Light */}
-        <directionalLight
-          position={[0, -10, 15]}
-          intensity={0.4}
-          color="#1D4ED8"
-        />
+        {/* Warm 3000K Interior Architectural Fill Light */}
+        {!isExterior && (
+          <directionalLight
+            position={[0, -2, 10]}
+            intensity={0.4}
+            color="#FEF3C7"
+          />
+        )}
 
         {/* 1. Exterior Building Scene (Futuristic Mall Plaza) */}
         {isExterior && <FlipkartBuilding />}

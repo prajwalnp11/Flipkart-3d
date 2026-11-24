@@ -1,10 +1,11 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStore } from '../../store/useStore';
 import { AutomaticStoreDoors } from '../Entrance/AutomaticStoreDoors';
 import { DynamicProductModel } from '../ProductViewer/DynamicProductModel';
+import { getCarraraMarbleTexture, getCarraraMarbleRoughnessTexture } from '../../utils/marbleTextures';
 
 // Interactive Product Table / Display Counter in the Showroom
 function InteractiveDisplayItem({ product, position, rotation = [0, 0, 0], scale = 0.55, children, label, brand, price, fallbackColor }) {
@@ -112,16 +113,41 @@ function BrandStorefrontPortal({ position, rotation, brandKey, name, tagline, co
 
   return (
     <group position={position} rotation={rotation}>
-      {/* Store Exterior Building Structure */}
+      {/* Fluted Marble Storefront Structural Frame */}
       <mesh position={[0, 2.5, -0.2]} castShadow>
-        <boxGeometry args={[6.4, 5.0, 0.4]} />
+        <boxGeometry args={[6.6, 5.0, 0.4]} />
         <meshStandardMaterial color="#0F172A" roughness={0.25} metalness={0.8} />
       </mesh>
 
-      {/* Brand Fascia Canopy */}
+      {/* Fluted White Carrara Marble Pilasters (Left & Right) */}
+      {[-3.15, 3.15].map((x, idx) => (
+        <group key={idx} position={[x, 2.5, 0]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.3, 5.0, 0.45]} />
+            <meshStandardMaterial color="#F8FAFC" roughness={0.12} metalness={0.1} />
+          </mesh>
+          {/* Champagne Gold Column Plinth & Capital */}
+          <mesh position={[0, -2.4, 0.05]}>
+            <boxGeometry args={[0.34, 0.2, 0.48]} />
+            <meshStandardMaterial color="#C5A880" metalness={0.85} roughness={0.2} />
+          </mesh>
+          <mesh position={[0, 2.4, 0.05]}>
+            <boxGeometry args={[0.34, 0.2, 0.48]} />
+            <meshStandardMaterial color="#C5A880" metalness={0.85} roughness={0.2} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Brand Fascia Canopy in Anodized Brushed Titanium */}
       <mesh position={[0, 4.4, 0.1]}>
-        <boxGeometry args={[6.2, 0.9, 0.6]} />
+        <boxGeometry args={[6.3, 0.9, 0.6]} />
         <meshStandardMaterial color="#1E293B" metalness={0.9} roughness={0.15} />
+      </mesh>
+
+      {/* Champagne Gold Lower Trim Ribbon on Canopy */}
+      <mesh position={[0, 3.96, 0.41]}>
+        <boxGeometry args={[6.3, 0.04, 0.04]} />
+        <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
       </mesh>
 
       {/* Brand Glowing Neon Perimeter Edge */}
@@ -154,6 +180,34 @@ function BrandStorefrontPortal({ position, rotation, brandKey, name, tagline, co
       >
         {tagline}
       </Text>
+
+      {/* Flanking Vitrine Showcases (Left and Right of Doors) */}
+      {[-2.3, 2.3].map((x, idx) => (
+        <group key={idx} position={[x, 1.8, 0]}>
+          {/* Clear Showcase Glass Pane */}
+          <mesh position={[0, 0, 0.15]}>
+            <boxGeometry args={[1.0, 3.2, 0.05]} />
+            <meshPhysicalMaterial
+              color="#FFFFFF"
+              transmission={0.92}
+              transparent
+              opacity={0.3}
+              roughness={0.06}
+              ior={1.5}
+            />
+          </mesh>
+          {/* Vitrine Backing Wall */}
+          <mesh position={[0, 0, -0.05]}>
+            <boxGeometry args={[1.0, 3.2, 0.05]} />
+            <meshStandardMaterial color="#0B132B" roughness={0.3} metalness={0.5} />
+          </mesh>
+          {/* Vitrine Downlight */}
+          <pointLight position={[0, 1.4, 0.1]} intensity={0.9} distance={3} color="#FFF8E7" />
+        </group>
+      ))}
+
+      {/* Warm Storefront Entry Downlight */}
+      <pointLight position={[0, 4.0, 0.6]} intensity={1.2} distance={5} color="#FFFBF5" />
 
       {/* Automatic Glass Doors */}
       <AutomaticStoreDoors
@@ -265,41 +319,61 @@ export function ElectronicsShowroom({ floorY = 8 }) {
 
   const currentBrandConfig = selectedBrand ? BRAND_CONFIGS[selectedBrand] : null;
 
+  // Luxury Carrara Marble Textures for Floor Concourse
+  const marbleTexture = useMemo(() => getCarraraMarbleTexture(6, 5), []);
+  const marbleRoughness = useMemo(() => getCarraraMarbleRoughnessTexture(6, 5), []);
+
   return (
     <group position={[0, floorY, 0]}>
       {/* ================= MODE A: TECH AVENUE (BRAND CONCOURSE) ================= */}
       {!selectedBrand && (
         <group>
-          {/* Reflective Concourse Marble Floor */}
+          {/* Polished Carrara Marble Concourse Floor */}
           <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
             <planeGeometry args={[38, 30]} />
-            <meshStandardMaterial color="#F8FAFC" roughness={0.12} metalness={0.25} />
+            <meshStandardMaterial
+              map={marbleTexture}
+              roughnessMap={marbleRoughness}
+              roughness={0.12}
+              metalness={0.12}
+              envMapIntensity={1.3}
+            />
           </mesh>
 
-          {/* Central Blue Neon Concourse Guide Ribbons */}
-          <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[5.2, 5.35, 48]} />
-            <meshBasicMaterial color="#2874F0" />
-          </mesh>
-          <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[11.5, 11.65, 48]} />
-            <meshBasicMaterial color="#0284C7" />
+          {/* Nero Marquina Perimeter Accent Border */}
+          <mesh position={[0, -0.045, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[13.2, 13.8, 64]} />
+            <meshStandardMaterial color="#0F172A" roughness={0.15} metalness={0.3} />
           </mesh>
 
-          {/* Grand Concourse Entrance Billboard */}
+          {/* Champagne Gold Concentric Inlay Seams */}
+          <mesh position={[0, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[5.2, 5.28, 64]} />
+            <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.15} />
+          </mesh>
+          <mesh position={[0, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[11.5, 11.58, 64]} />
+            <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.15} />
+          </mesh>
+
+          {/* Grand Concourse Entrance Architectural Pylon / Billboard */}
           <group position={[0, 5.8, -12.5]}>
             <mesh>
               <boxGeometry args={[16, 1.4, 0.1]} />
-              <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
+              <meshStandardMaterial color="#FFFFFF" roughness={0.12} metalness={0.08} />
             </mesh>
             <mesh position={[0, 0.65, 0.02]}>
-              <boxGeometry args={[16, 0.1, 0.08]} />
-              <meshBasicMaterial color="#2874F0" />
+              <boxGeometry args={[16, 0.08, 0.08]} />
+              <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
             </mesh>
-            <Text position={[0, 0.18, 0.08]} fontSize={0.38} color="#172B4D" fontWeight={900}>
+            <mesh position={[0, -0.65, 0.02]}>
+              <boxGeometry args={[16, 0.04, 0.06]} />
+              <meshStandardMaterial color="#0284C7" />
+            </mesh>
+            <Text position={[0, 0.18, 0.08]} fontSize={0.38} color="#0F172A" fontWeight={900}>
               TECH AVENUE – FLAGSHIP BRAND CONCOURSE
             </Text>
-            <Text position={[0, -0.25, 0.08]} fontSize={0.16} color="#2874F0" fontWeight={700}>
+            <Text position={[0, -0.25, 0.08]} fontSize={0.16} color="#0284C7" fontWeight={700}>
               SELECT A BRAND STOREFRONT TO ENTER ITS EXCLUSIVE SHOWROOM
             </Text>
           </group>

@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -7,6 +7,7 @@ import { SofaModel } from '../ProductViewer/Models3D/SofaModel';
 import { TelevisionModel } from '../ProductViewer/Models3D/TelevisionModel';
 import { RefrigeratorModel } from '../ProductViewer/Models3D/RefrigeratorModel';
 import { WashingMachineModel } from '../ProductViewer/Models3D/WashingMachineModel';
+import { getCarraraMarbleTexture, getCarraraMarbleRoughnessTexture } from '../../utils/marbleTextures';
 
 function InteractiveHomeItem({ product, position, rotation = [0, 0, 0], scale = 0.55, children, label, price }) {
   const [hovered, setHovered] = useState(false);
@@ -274,32 +275,64 @@ export function HomeShowroom({ floorY = 24 }) {
   const fridge = products.find((p) => p.slug === 'lg-655l-instaview-refrigerator');
   const washingMachine = products.find((p) => p.slug === 'bosch-series-8-9kg-idos');
 
+  // Luxury Carrara Marble Textures for Home Living Concourse
+  const marbleTexture = useMemo(() => getCarraraMarbleTexture(6, 5), []);
+  const marbleRoughness = useMemo(() => getCarraraMarbleRoughnessTexture(6, 5), []);
+
   return (
     <group position={[0, floorY, 0]}>
       {/* ================= 1. MARBLE FLOORING & ACCENT INLAY ================= */}
+      {/* Carrara Polished Marble Base */}
       <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[38, 30]} />
-        <meshStandardMaterial color="#F8FAFC" roughness={0.12} metalness={0.2} />
+        <meshStandardMaterial
+          map={marbleTexture}
+          roughnessMap={marbleRoughness}
+          roughness={0.12}
+          metalness={0.1}
+          envMapIntensity={1.3}
+        />
       </mesh>
-      <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[13.2, 13.4, 48]} />
-        <meshBasicMaterial color="#10B981" />
+
+      {/* Nero Marquina Perimeter Border */}
+      <mesh position={[0, -0.045, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[13.2, 13.8, 64]} />
+        <meshStandardMaterial color="#0F172A" roughness={0.15} metalness={0.3} />
       </mesh>
+
+      {/* Champagne Gold Floor Inlay Rings */}
+      <mesh position={[0, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[11.2, 11.28, 64]} />
+        <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
+      </mesh>
+      <mesh position={[0, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[5.5, 5.58, 64]} />
+        <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
+      </mesh>
+
+      {/* Warm Downlights for Furniture Showroom Vignette */}
+      {[-5, 5].map((x, idx) => (
+        <pointLight key={idx} position={[x, 5.0, 0]} intensity={1.3} distance={7} color="#FFF8E7" />
+      ))}
 
       {/* ================= 2. MAIN HEADER BILLBOARD ================= */}
       <group position={[0, 5.8, -7.15]}>
         <mesh>
           <boxGeometry args={[15, 1.4, 0.08]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
+          <meshStandardMaterial color="#FFFFFF" roughness={0.12} metalness={0.08} />
         </mesh>
         <mesh position={[0, 0.65, 0.02]}>
-          <boxGeometry args={[15, 0.1, 0.06]} />
-          <meshBasicMaterial color="#10B981" />
+          <boxGeometry args={[15, 0.08, 0.06]} />
+          <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
+        </mesh>
+        <mesh position={[0, -0.65, 0.02]}>
+          <boxGeometry args={[15, 0.04, 0.04]} />
+          <meshStandardMaterial color="#10B981" />
         </mesh>
         <Text
           position={[0, 0.18, 0.06]}
           fontSize={0.38}
-          color="#172B4D"
+          color="#0F172A"
           anchorX="center"
           anchorY="middle"
           fontWeight={900}

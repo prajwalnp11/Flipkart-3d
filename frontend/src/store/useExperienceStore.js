@@ -3,6 +3,38 @@ import { api } from '../services/api';
 import { sounds } from '../services/soundEffects';
 import { DEFAULT_FLOORS, DEFAULT_CATEGORIES, DEFAULT_PRODUCTS } from './initialMallData';
 
+/**
+ * Robust Category-to-Floor resolver using Django metadata, floor references, and department heuristics.
+ * Guarantees that category IDs are never falsely assumed to match floor numbers.
+ */
+export function resolveCategoryFloor(category) {
+  if (!category) return 1;
+
+  if (typeof category.floor_number === 'number') {
+    return category.floor_number;
+  }
+  if (typeof category.floor?.floor_number === 'number') {
+    return category.floor.floor_number;
+  }
+
+  const slug = (category.slug || category.name || '').toLowerCase();
+  if (/mobile|smartphone|laptop|computer|electronic|wearable|smartwatch|audio|tech|gaming|sports/.test(slug)) {
+    return 1;
+  }
+  if (/fashion|apparel|shoe|sneaker|beauty|cosmetic|accessory|accessories|lifestyle/.test(slug)) {
+    return 2;
+  }
+  if (/furniture|home|living|appliance|tv|television|kitchen|grocery/.test(slug)) {
+    return 3;
+  }
+
+  if (typeof category.floor === 'number' && category.floor >= 1 && category.floor <= 3) {
+    return category.floor;
+  }
+
+  return 1;
+}
+
 // App State Machine Phases:
 // loading -> exterior -> entering -> lobby -> toElevator -> riding -> arriving -> showroom -> inspecting
 export const useExperienceStore = create((set, get) => ({
@@ -52,6 +84,8 @@ export const useExperienceStore = create((set, get) => ({
   // Active Data
   floors: DEFAULT_FLOORS,
   categories: DEFAULT_CATEGORIES,
+  categoriesLoading: false,
+  categoriesError: null,
   products: DEFAULT_PRODUCTS,
   cart: { items: [], total_items: 0, subtotal: 0, discount: 0, delivery_fee: 0, total_amount: 0 },
   wishlist: [],
@@ -89,6 +123,7 @@ export const useExperienceStore = create((set, get) => ({
 
   // Initialize data from Django API with fallback preservation
   initData: async () => {
+    set({ categoriesLoading: true, categoriesError: null });
     try {
       const [floors, categories, products, cart] = await Promise.all([
         api.getFloors(),
@@ -96,14 +131,48 @@ export const useExperienceStore = create((set, get) => ({
         api.getProducts(),
         api.getCart()
       ]);
+      const validCategories = Array.isArray(categories) && categories.length > 0 ? categories : DEFAULT_CATEGORIES;
       set({
         floors: Array.isArray(floors) && floors.length > 0 ? floors : DEFAULT_FLOORS,
-        categories: Array.isArray(categories) && categories.length > 0 ? categories : DEFAULT_CATEGORIES,
+        categories: validCategories,
+        categoriesLoading: false,
+        categoriesError: null,
         products: Array.isArray(products) && products.length > 0 ? products : DEFAULT_PRODUCTS,
         cart: cart && cart.items ? cart : get().cart
       });
     } catch (err) {
       console.warn('Init data using cached defaults:', err);
+      set({
+        categories: get().categories?.length > 0 ? get().categories : DEFAULT_CATEGORIES,
+        categoriesLoading: false,
+        categoriesError: err.message || 'Network connection offline'
+      });
+    }
+  },
+
+  // On-demand Category reload with error handling & retry
+  fetchCategories: async () => {
+    set({ categoriesLoading: true, categoriesError: null });
+    try {
+      const data = await api.getCategories();
+      if (Array.isArray(data) && data.length > 0) {
+        set({ categories: data, categoriesLoading: false, categoriesError: null });
+        get().addToast('Directory Updated', `Loaded ${data.length} shopping departments`, 'success');
+      } else if (Array.isArray(data) && data.length === 0) {
+        set({ categories: [], categoriesLoading: false, categoriesError: null });
+      } else {
+        set({
+          categories: get().categories?.length > 0 ? get().categories : DEFAULT_CATEGORIES,
+          categoriesLoading: false,
+          categoriesError: 'Server returned invalid department data'
+        });
+      }
+    } catch (err) {
+      set({
+        categories: get().categories?.length > 0 ? get().categories : DEFAULT_CATEGORIES,
+        categoriesLoading: false,
+        categoriesError: err.message || 'Failed to fetch categories'
+      });
     }
   },
 
@@ -183,8 +252,19 @@ export const useExperienceStore = create((set, get) => ({
     sounds.playPortalWhoosh();
     set({ selectedCategory: category });
 
-    const destFloor = category.floor_number !== undefined ? category.floor_number : (category.floor || 1);
+    const destFloor = resolveCategoryFloor(category);
+    const floorNames = { 1: '1F Electronics & Gadgets', 2: '2F Fashion & Lifestyle', 3: '3F Home & Appliances' };
+    get().addToast(
+      category.name || 'Department Selected',
+      `Taking panoramic glass elevator to ${floorNames[destFloor] || `Floor ${destFloor}`}`,
+      'info'
+    );
     get().travelToFloor(destFloor);
+  },
+
+  // Clear selected category filter
+  clearSelectedCategory: () => {
+    set({ selectedCategory: null });
   },
 
   // 3. Complete Glass Elevator Master Sequence

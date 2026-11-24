@@ -19,7 +19,9 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronLeft,
-  Smartphone
+  Smartphone,
+  X,
+  Tag
 } from 'lucide-react';
 
 export function NavigationHUD() {
@@ -29,6 +31,8 @@ export function NavigationHUD() {
   const currentFloor = useStore((state) => state.currentFloor);
   const targetFloor = useStore((state) => state.targetFloor);
   const selectedProduct = useStore((state) => state.selectedProduct);
+  const selectedCategory = useStore((state) => state.selectedCategory);
+  const clearSelectedCategory = useStore((state) => state.clearSelectedCategory);
   const selectedBrand = useStore((state) => state.selectedBrand);
   const enterBrandStore = useStore((state) => state.enterBrandStore);
   const exitBrandStore = useStore((state) => state.exitBrandStore);
@@ -218,6 +222,27 @@ export function NavigationHUD() {
           </div>
         </div>
 
+        {/* ================= ACTIVE CATEGORY FILTER PILL ================= */}
+        {selectedCategory && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-4xl mx-auto mt-2 flex justify-center pointer-events-auto"
+          >
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0F172A]/90 backdrop-blur-xl border border-cyan-400/40 text-cyan-300 text-xs font-bold shadow-lg">
+              <Tag className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Category: <strong className="text-white">{selectedCategory.name}</strong></span>
+              <button
+                onClick={clearSelectedCategory}
+                className="w-4 h-4 rounded-full bg-slate-800 hover:bg-rose-500 hover:text-white text-slate-400 flex items-center justify-center transition-colors ml-1"
+                title="Clear category filter"
+              >
+                <X className="w-2.5 h-2.5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         {/* ================= FLOOR 1 BRAND STORE CONCOURSE BAR (Section 6) ================= */}
         {floorNumber === 1 && !selectedProduct && (
           <motion.div
@@ -347,6 +372,23 @@ export function NavigationHUD() {
           >
             {currentFloorObj.name}
           </button>
+
+          {/* Active Category Filter Crumb */}
+          {selectedCategory && !selectedProduct && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-500" />
+              <span className="text-[#00F0FF] font-extrabold flex items-center gap-1">
+                <span>{selectedCategory.name}</span>
+                <button
+                  onClick={clearSelectedCategory}
+                  className="hover:text-rose-400 text-slate-400 p-0.5"
+                  title="Clear Category Filter"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            </>
+          )}
 
           {/* Active Brand Boutique Crumb */}
           {selectedBrand && !selectedProduct && (

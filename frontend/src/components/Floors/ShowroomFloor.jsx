@@ -1,12 +1,16 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Text } from '@react-three/drei';
 import { useStore } from '../../store/useStore';
 import { ProductPedestal } from '../Showroom/ProductPedestal';
 import { Elevator3D } from '../Elevator/Elevator3D';
+import { getCarraraMarbleTexture, getCarraraMarbleRoughnessTexture } from '../../utils/marbleTextures';
 
 export function ShowroomFloor({ floorNumber = 1 }) {
   const products = useStore((state) => state.products);
   const floors = useStore((state) => state.floors);
+
+  const marbleTexture = useMemo(() => getCarraraMarbleTexture(6, 6), []);
+  const marbleRoughness = useMemo(() => getCarraraMarbleRoughnessTexture(6, 6), []);
 
   const currentFloorData = floors.find((f) => f.floor_number === floorNumber) || {
     name: floorNumber === 1 ? 'First Floor – Mobiles & Electronics' : floorNumber === 2 ? 'Second Floor – Fashion & Lifestyle' : 'Third Floor – Home & Living',
@@ -39,10 +43,12 @@ export function ShowroomFloor({ floorNumber = 1 }) {
       <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[32, 28]} />
         <meshStandardMaterial
-          color="#F8FAFC"
-          roughness={0.12}
-          metalness={0.2}
-          envMapIntensity={1.2}
+          map={marbleTexture}
+          roughnessMap={marbleRoughness}
+          color="#FFFFFF"
+          roughness={0.11}
+          metalness={0.22}
+          envMapIntensity={1.6}
         />
       </mesh>
 

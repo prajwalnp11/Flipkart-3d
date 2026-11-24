@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
@@ -7,6 +7,7 @@ import { SneakerModel } from '../ProductViewer/Models3D/SneakerModel';
 import { MannequinModel } from '../ProductViewer/Models3D/MannequinModel';
 import { HandbagModel } from '../ProductViewer/Models3D/HandbagModel';
 import { SmartwatchModel } from '../ProductViewer/Models3D/SmartwatchModel';
+import { getCarraraMarbleTexture, getCarraraMarbleRoughnessTexture } from '../../utils/marbleTextures';
 
 function InteractiveFashionItem({ product, position, rotation = [0, 0, 0], scale = 0.6, children, label, price }) {
   const [hovered, setHovered] = useState(false);
@@ -231,32 +232,69 @@ export function FashionShowroom({ floorY = 16 }) {
     model_3d_type: 'smartwatch'
   };
 
+  // Luxury Carrara Marble Textures for Haute Couture Runway Concourse
+  const marbleTexture = useMemo(() => getCarraraMarbleTexture(6, 5), []);
+  const marbleRoughness = useMemo(() => getCarraraMarbleRoughnessTexture(6, 5), []);
+
   return (
     <group position={[0, floorY, 0]}>
       {/* ================= 1. RUNWAY MARBLE FLOOR ================= */}
+      {/* Carrara Polished Marble Base */}
       <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[36, 28]} />
-        <meshStandardMaterial color="#F8FAFC" roughness={0.12} metalness={0.2} />
+        <meshStandardMaterial
+          map={marbleTexture}
+          roughnessMap={marbleRoughness}
+          roughness={0.12}
+          metalness={0.1}
+          envMapIntensity={1.3}
+        />
       </mesh>
-      <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[13.2, 13.4, 48]} />
-        <meshBasicMaterial color="#EC4899" />
+
+      {/* Central Haute Couture Polished Obsidian Runway */}
+      <group position={[0, 0, 0]}>
+        <mesh position={[0, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+          <planeGeometry args={[4.2, 20]} />
+          <meshStandardMaterial color="#0B0F19" roughness={0.08} metalness={0.35} />
+        </mesh>
+        {/* Champagne Gold Flanking Runway Rails */}
+        {[-2.15, 2.15].map((x, idx) => (
+          <mesh key={idx} position={[x, -0.035, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[0.08, 20]} />
+            <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Subtle Rose Gold Peripheral Circular Inlay */}
+      <mesh position={[0, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[13.2, 13.35, 64]} />
+        <meshStandardMaterial color="#C5A880" metalness={0.88} roughness={0.2} />
       </mesh>
+
+      {/* Warm Runway Overhead Spotlights */}
+      {[-4, 0, 4].map((z, idx) => (
+        <pointLight key={idx} position={[0, 5.5, z]} intensity={1.5} distance={7} color="#FFF8E7" />
+      ))}
 
       {/* ================= 2. MAIN BOUTIQUE HEADER BILLBOARD ================= */}
       <group position={[0, 5.8, -7.15]}>
         <mesh>
           <boxGeometry args={[14, 1.4, 0.08]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
+          <meshStandardMaterial color="#FFFFFF" roughness={0.12} metalness={0.08} />
         </mesh>
         <mesh position={[0, 0.65, 0.02]}>
-          <boxGeometry args={[14, 0.1, 0.06]} />
-          <meshBasicMaterial color="#EC4899" />
+          <boxGeometry args={[14, 0.08, 0.06]} />
+          <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
+        </mesh>
+        <mesh position={[0, -0.65, 0.02]}>
+          <boxGeometry args={[14, 0.04, 0.04]} />
+          <meshStandardMaterial color="#EC4899" />
         </mesh>
         <Text
           position={[0, 0.18, 0.06]}
           fontSize={0.38}
-          color="#172B4D"
+          color="#0F172A"
           anchorX="center"
           anchorY="middle"
           fontWeight={900}
