@@ -110,6 +110,17 @@ function InteractiveDisplayItem({ product, position, rotation = [0, 0, 0], scale
 // Brand Boutique Facade Card on Tech Avenue Concourse
 function BrandStorefrontPortal({ position, rotation, brandKey, name, tagline, color, logoColor, onEnter }) {
   const [hovered, setHovered] = useState(false);
+  const avatarPosition = useStore((state) => state.avatarPosition);
+  const navigationMode = useStore((state) => state.navigationMode);
+  const currentFloor = useStore((state) => state.currentFloor);
+
+  const isNearAvatar =
+    navigationMode === 'avatar' &&
+    currentFloor === 1 &&
+    Array.isArray(avatarPosition) &&
+    Math.hypot(avatarPosition[0] - position[0], avatarPosition[2] - position[2]) < 4.6;
+
+  const doorsOpen = hovered || isNearAvatar;
 
   return (
     <group position={position} rotation={rotation}>
@@ -214,7 +225,7 @@ function BrandStorefrontPortal({ position, rotation, brandKey, name, tagline, co
         position={[0, 0, 0]}
         width={3.4}
         height={3.2}
-        isOpen={hovered}
+        isOpen={doorsOpen}
         brandName={name}
         brandColor={color}
         onTriggerEnter={onEnter}

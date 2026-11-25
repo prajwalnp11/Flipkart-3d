@@ -28,6 +28,7 @@ function CameraRig() {
   const targetFloor = useStore((state) => state.targetFloor);
   const selectedBrand = useStore((state) => state.selectedBrand);
   const navigationMode = useStore((state) => state.navigationMode);
+  const elevatorStatus = useStore((state) => state.elevatorStatus);
   const avatarPosition = useStore((state) => state.avatarPosition || [0, 0, 8]);
   const avatarRotation = useStore((state) => state.avatarRotation || 0);
 
@@ -39,6 +40,7 @@ function CameraRig() {
   const activeFloor = selectedFloor !== undefined ? selectedFloor : currentFloor;
 
   useFrame((state, delta) => {
+    const dt = Math.min(delta, 0.05);
     const currentFloorY = FLOOR_Y_MAP[activeFloor] ?? 0;
     const destFloorY = FLOOR_Y_MAP[targetFloor] ?? 0;
 
@@ -46,7 +48,7 @@ function CameraRig() {
     const isEnteringPhase = currentView === 'ENTERING' || phase === 'entering';
     const isLobbyPhase = currentView === 'GROUND_LOBBY' || phase === 'lobby';
     const isToElevatorPhase = currentView === 'TRANSITION_ELEVATOR' || phase === 'toElevator';
-    const isRidingPhase = currentView === 'IN_ELEVATOR' || phase === 'riding';
+    const isRidingPhase = currentView === 'IN_ELEVATOR' || phase === 'riding' || phase === 'arriving';
     const isShowroomPhase = currentView === 'SHOWROOM' || phase === 'showroom';
 
     if (isExteriorPhase) {
@@ -60,7 +62,7 @@ function CameraRig() {
       elevatorCurrentY.current = 0;
     } else if (isToElevatorPhase) {
       // Camera smoothly moves towards the glass elevator entrance at current floor
-      targetCamPos.current.set(0, currentFloorY + 1.8, -4.2);
+      targetCamPos.current.set(0, currentFloorY + 1.8, -3.6);
       targetLookAt.current.set(0, currentFloorY + 1.8, -7.0);
       elevatorCurrentY.current = currentFloorY;
     } else if (isRidingPhase) {
@@ -68,14 +70,20 @@ function CameraRig() {
       elevatorCurrentY.current = THREE.MathUtils.lerp(
         elevatorCurrentY.current,
         destFloorY,
-        1.8 * delta
+        1.8 * dt
       );
-      targetCamPos.current.set(0, elevatorCurrentY.current + 1.75, -6.8);
-      // Look outward through front panoramic glass into the open central atrium
-      targetLookAt.current.set(0, elevatorCurrentY.current + 1.75, 4.5);
+      if (elevatorStatus === 'exiting') {
+        // Step out of the panoramic cabin into the destination floor concourse
+        targetCamPos.current.set(0, destFloorY + 2.0, -1.5);
+        targetLookAt.current.set(0, destFloorY + 1.4, 4.5);
+      } else {
+        targetCamPos.current.set(0, elevatorCurrentY.current + 1.75, -6.8);
+        // Look outward through front panoramic glass into the open central atrium
+        targetLookAt.current.set(0, elevatorCurrentY.current + 1.75, 4.5);
+      }
     } else if (navigationMode === 'avatar') {
       // Third-Person Over-the-Shoulder Camera following Customer Avatar (Section 4)
-      const offset = new THREE.Vector3(0, 1.9, 3.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), avatarRotation);
+      const offset = new THREE.Vector3(0, 1.95, 3.9).applyAxisAngle(new THREE.Vector3(0, 1, 0), avatarRotation);
       targetCamPos.current.set(
         avatarPosition[0] + offset.x,
         avatarPosition[1] + offset.y,
@@ -104,10 +112,10 @@ function CameraRig() {
     }
 
     // Smooth camera position dampening
-    state.camera.position.lerp(targetCamPos.current, 2.8 * delta);
+    state.camera.position.lerp(targetCamPos.current, 3.0 * dt);
 
     // Smooth lookAt dampening
-    currentLookAt.current.lerp(targetLookAt.current, 3.2 * delta);
+    currentLookAt.current.lerp(targetLookAt.current, 3.4 * dt);
     state.camera.lookAt(currentLookAt.current);
   });
 

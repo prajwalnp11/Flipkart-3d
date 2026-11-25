@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useStore } from '../../store/useStore';
+import { useStore, resolveCategoryFloor } from '../../store/useStore';
 import {
   ShoppingBag,
   ShoppingCart,
@@ -21,7 +21,8 @@ import {
   ChevronLeft,
   Smartphone,
   X,
-  Tag
+  Tag,
+  Home
 } from 'lucide-react';
 
 export function NavigationHUD() {
@@ -46,6 +47,8 @@ export function NavigationHUD() {
 
   const quickJumpToFloor = useStore((state) => state.quickJumpToFloor);
   const instantJumpToFloor = useStore((state) => state.instantJumpToFloor);
+  const returnToGroundFloor = useStore((state) => state.returnToGroundFloor);
+  const elevatorStatus = useStore((state) => state.elevatorStatus);
   const exitToExterior = useStore((state) => state.exitToExterior);
   const closeProductInspect = useStore((state) => state.closeProductInspect);
   const cart = useStore((state) => state.cart);
@@ -134,21 +137,33 @@ export function NavigationHUD() {
                 <span>Exit {selectedBrand.toUpperCase()}</span>
               </button>
             )}
+
+            {/* Return to Ground Floor via Elevator when on upper floors */}
+            {floorNumber > 0 && !selectedBrand && (
+              <button
+                onClick={returnToGroundFloor}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0F172A]/90 backdrop-blur-md text-slate-200 hover:text-cyan-400 hover:bg-[#1E293B] border border-slate-700/80 transition-all text-xs font-bold shadow-sm hover:scale-105"
+                title="Take Panoramic Elevator back to Ground Lobby"
+              >
+                <Home className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="hidden lg:inline">Ground Lobby</span>
+              </button>
+            )}
           </div>
 
-          {/* Center: Floor Navigation Tabs */}
+          {/* Center: Floor Navigation Tabs (Triggers Panoramic Elevator) */}
           <div className="flex items-center p-1 rounded-2xl bg-[#0F172A]/90 backdrop-blur-md pointer-events-auto shadow-sm border border-slate-700/80">
             {floorTabs.map((tab) => {
               const isCurrent =
                 (currentView === 'SHOWROOM' || currentView === 'GROUND_LOBBY' || phase === 'lobby' || phase === 'showroom') &&
                 floorNumber === tab.num;
-              const isTarget = (currentView === 'IN_ELEVATOR' || phase === 'riding' || phase === 'toElevator') && targetFloor === tab.num;
+              const isTarget = (currentView === 'IN_ELEVATOR' || phase === 'riding' || phase === 'toElevator' || phase === 'arriving') && targetFloor === tab.num;
               const active = isCurrent || isTarget;
 
               return (
                 <button
                   key={tab.num}
-                  onClick={() => instantJumpToFloor(tab.num)}
+                  onClick={() => quickJumpToFloor(tab.num)}
                   className={`relative px-3 md:px-4 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 ${
                     active
                       ? 'bg-gradient-to-r from-[#2874F0] to-[#00F0FF] text-white shadow-glow-blue'
@@ -232,6 +247,14 @@ export function NavigationHUD() {
             <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0F172A]/90 backdrop-blur-xl border border-cyan-400/40 text-cyan-300 text-xs font-bold shadow-lg">
               <Tag className="w-3.5 h-3.5 text-cyan-400" />
               <span>Category: <strong className="text-white">{selectedCategory.name}</strong></span>
+              <span className="px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-black">
+                {resolveCategoryFloor(selectedCategory)}F
+              </span>
+              {elevatorStatus !== 'idle' && (
+                <span className="text-[10px] text-amber-300 uppercase tracking-wider font-extrabold ml-1">
+                  • Elevator {elevatorStatus.replace('_', ' ')}
+                </span>
+              )}
               <button
                 onClick={clearSelectedCategory}
                 className="w-4 h-4 rounded-full bg-slate-800 hover:bg-rose-500 hover:text-white text-slate-400 flex items-center justify-center transition-colors ml-1"
