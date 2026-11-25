@@ -64,6 +64,8 @@ export const useExperienceStore = create((set, get) => ({
   elevatorDoorOpen: false,
   elevatorMoving: false,
   elevatorFloorDisplay: 'G',
+  elevatorStatus: 'idle', // 'idle' | 'approaching' | 'doors_opening' | 'boarding' | 'moving' | 'arrived' | 'exiting'
+  _elevatorTimers: [],
 
   // Customer Avatar & Navigation Mode (Section 4)
   navigationMode: 'guided', // 'guided' | 'avatar'
@@ -270,13 +272,22 @@ export const useExperienceStore = create((set, get) => ({
   // 3. Complete Glass Elevator Master Sequence
   travelToFloor: (destinationFloor) => {
     const currentFloor = get().currentFloor;
-    if (destinationFloor === currentFloor && get().phase === 'showroom') {
+    if (destinationFloor === currentFloor && (get().phase === 'showroom' || get().phase === 'lobby')) {
       return;
     }
 
+    // Clear any active elevator or cinematic timers
     if (get()._currentCinematicTimer) {
       clearTimeout(get()._currentCinematicTimer);
     }
+    const oldTimers = get()._elevatorTimers || [];
+    oldTimers.forEach((t) => clearTimeout(t));
+
+    const displayMap = { 0: 'G', 1: '1F', 2: '2F', 3: '3F' };
+    const startFloor = currentFloor;
+    const floorDiff = Math.abs(destinationFloor - startFloor);
+    const travelDuration = Math.max(1600, floorDiff * 950); // Scale vertical transit time by floors traveled
+    const timers = [];
 
     sounds.playClick();
     set({
@@ -285,56 +296,96 @@ export const useExperienceStore = create((set, get) => ({
       currentView: 'TRANSITION_ELEVATOR',
       cameraLock: true,
       activeHotspot: null,
+      selectedBrand: null,
       elevatorDoorOpen: false,
-      elevatorMoving: false
+      elevatorMoving: false,
+      elevatorStatus: 'approaching',
+      elevatorFloorDisplay: displayMap[startFloor] || `${startFloor}F`
     });
 
-    // Step A: Walk to elevator doors and slide doors open
-    setTimeout(() => {
+    // Step A: Customer reaches elevator & doors slide open
+    timers.push(setTimeout(() => {
       sounds.playDoorOpen();
-      set({ elevatorDoorOpen: true });
-    }, 700);
+      set({ elevatorDoorOpen: true, elevatorStatus: 'doors_opening' });
+    }, 650));
 
-    // Step B: Enter cabin & close doors
-    setTimeout(() => {
+    // Step B: Customer enters cabin & doors close
+    timers.push(setTimeout(() => {
+      set({ elevatorStatus: 'boarding' });
+    }, 1150));
+
+    timers.push(setTimeout(() => {
       set({
         phase: 'riding',
         currentView: 'IN_ELEVATOR',
         elevatorDoorOpen: false,
-        elevatorMoving: true
+        elevatorMoving: true,
+        elevatorStatus: 'moving'
       });
-    }, 1500);
+    }, 1600));
 
-    // Step C: Physical ascent/descent through atrium & digital indicator update
-    setTimeout(() => {
-      const displayMap = { 0: 'G', 1: '1F', 2: '2F', 3: '3F' };
-      set({ elevatorFloorDisplay: displayMap[destinationFloor] || `${destinationFloor}F` });
-    }, 2800);
+    // Step C: Progressive floor indicator updates during vertical travel
+    if (floorDiff > 0) {
+      const stepDirection = destinationFloor > startFloor ? 1 : -1;
+      for (let step = 1; step <= floorDiff; step++) {
+        const intermediateFloor = startFloor + step * stepDirection;
+        const stepTime = 1600 + Math.round((travelDuration * step) / (floorDiff + 0.35));
+        timers.push(setTimeout(() => {
+          set({ elevatorFloorDisplay: displayMap[intermediateFloor] || `${intermediateFloor}F` });
+        }, stepTime));
+      }
+    }
 
-    // Step D: Arrive at destination floor, ding chime & open doors
-    setTimeout(() => {
+    // Step D: Arrive at destination floor, arrival chime & doors open
+    const arriveTime = 1600 + travelDuration;
+    timers.push(setTimeout(() => {
       sounds.playElevatorDing();
+      sounds.playDoorOpen();
       set({
         phase: 'arriving',
         currentView: 'IN_ELEVATOR',
         elevatorMoving: false,
         elevatorDoorOpen: true,
+        elevatorStatus: 'arrived',
         currentFloor: destinationFloor,
-        selectedFloor: destinationFloor
+        selectedFloor: destinationFloor,
+        elevatorFloorDisplay: displayMap[destinationFloor] || `${destinationFloor}F`
       });
-    }, 4200);
+    }, arriveTime));
 
-    // Step E: Exit into Showroom or Ground Lobby
+    // Step E: Customer exits into destination floor showroom or ground lobby
+    const exitStartTime = arriveTime + 650;
+    timers.push(setTimeout(() => {
+      set({ elevatorStatus: 'exiting' });
+    }, exitStartTime));
+
     const endTimer = setTimeout(() => {
+      const activeCat = get().selectedCategory;
       set({
         phase: destinationFloor === 0 ? 'lobby' : 'showroom',
         currentView: destinationFloor === 0 ? 'GROUND_LOBBY' : 'SHOWROOM',
         elevatorDoorOpen: false,
-        cameraLock: false
+        elevatorStatus: 'idle',
+        cameraLock: false,
+        avatarPosition: [0, destinationFloor * 8, destinationFloor === 0 ? 7.8 : -4.2],
+        avatarRotation: destinationFloor === 0 ? 0 : Math.PI
       });
-    }, 5400);
+      if (destinationFloor > 0 && activeCat) {
+        get().addToast(
+          `Arrived at ${displayMap[destinationFloor]}`,
+          `Showroom ready for ${activeCat.name}`,
+          'success'
+        );
+      }
+    }, arriveTime + 1350);
 
-    get()._currentCinematicTimer = endTimer;
+    timers.push(endTimer);
+    set({ _elevatorTimers: timers, _currentCinematicTimer: endTimer });
+  },
+
+  // Return to Ground Floor via Panoramic Elevator
+  returnToGroundFloor: () => {
+    get().travelToFloor(0);
   },
 
   // Quick Skip active cinematic transition (UX Principle #2)
@@ -342,6 +393,8 @@ export const useExperienceStore = create((set, get) => ({
     if (get()._currentCinematicTimer) {
       clearTimeout(get()._currentCinematicTimer);
     }
+    const oldTimers = get()._elevatorTimers || [];
+    oldTimers.forEach((t) => clearTimeout(t));
 
     const { phase, targetFloor } = get();
 
@@ -354,6 +407,7 @@ export const useExperienceStore = create((set, get) => ({
         targetFloor: 0,
         doorOpen: false,
         cameraLock: false,
+        elevatorStatus: 'idle',
         elevatorFloorDisplay: 'G'
       });
     } else if (phase === 'toElevator' || phase === 'riding' || phase === 'arriving') {
@@ -365,8 +419,12 @@ export const useExperienceStore = create((set, get) => ({
         selectedFloor: targetFloor,
         elevatorMoving: false,
         elevatorDoorOpen: false,
+        elevatorStatus: 'idle',
         cameraLock: false,
-        elevatorFloorDisplay: displayMap[targetFloor] || `${targetFloor}F`
+        elevatorFloorDisplay: displayMap[targetFloor] || `${targetFloor}F`,
+        avatarPosition: [0, targetFloor * 8, targetFloor === 0 ? 7.8 : -4.2],
+        avatarRotation: targetFloor === 0 ? 0 : Math.PI,
+        _elevatorTimers: []
       });
       sounds.playElevatorDing();
     }
@@ -382,6 +440,8 @@ export const useExperienceStore = create((set, get) => ({
     if (get()._currentCinematicTimer) {
       clearTimeout(get()._currentCinematicTimer);
     }
+    const oldTimers = get()._elevatorTimers || [];
+    oldTimers.forEach((t) => clearTimeout(t));
     sounds.playClick();
     sounds.playElevatorDing();
     const displayMap = { 0: 'G', 1: '1F', 2: '2F', 3: '3F' };
@@ -395,8 +455,12 @@ export const useExperienceStore = create((set, get) => ({
       cameraLock: false,
       elevatorMoving: false,
       elevatorDoorOpen: false,
+      elevatorStatus: 'idle',
       selectedBrand: null,
-      elevatorFloorDisplay: displayMap[floorNum] || `${floorNum}F`
+      elevatorFloorDisplay: displayMap[floorNum] || `${floorNum}F`,
+      avatarPosition: [0, floorNum * 8, floorNum === 0 ? 7.8 : -4.2],
+      avatarRotation: floorNum === 0 ? 0 : Math.PI,
+      _elevatorTimers: []
     });
     get().addToast('Teleported', `Arrived at ${displayMap[floorNum] || floorNum} Floor`, 'success');
   },

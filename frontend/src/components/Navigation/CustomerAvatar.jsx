@@ -2,12 +2,26 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
-import { useStore } from '../../store/useStore';
+import { useStore, resolveCategoryFloor } from '../../store/useStore';
+import { resolveMallCollisions } from '../../utils/mallCollisions';
+
+const FLOOR_Y_MAP = { 0: 0, 1: 8, 2: 16, 3: 24 };
+
+// Brand storefront coordinates matching ElectronicsShowroom.jsx
+const FLOOR1_BRAND_STORES = [
+  { brand: 'apple', name: 'Apple Flagship Boutique', pos: [-7.5, -5.5] },
+  { brand: 'samsung', name: 'Samsung Galaxy Store', pos: [7.5, -5.5] },
+  { brand: 'google', name: 'Google Pixel Studio', pos: [-8.5, 3.5] },
+  { brand: 'oneplus', name: 'OnePlus Experience Store', pos: [8.5, 3.5] },
+  { brand: 'xiaomi', name: 'Xiaomi Leica Gallery', pos: [0, -11.5] },
+  { brand: 'nothing', name: 'Nothing Concept Store', pos: [0, 9.5] }
+];
 
 /**
  * 3D Customer Avatar Component (Section 4)
- * Controllable third-person customer avatar with walking/idle procedural animations,
- * WASD / Arrow movement, turning, and proximity interaction handling ('E' key).
+ * Controllable third-person customer avatar with smooth acceleration/turning,
+ * architectural collision boundaries, elevator transit synchronization,
+ * and proximity interaction handling ('E' key).
  */
 export function CustomerAvatar({ floorY = 0 }) {
   const avatarGroupRef = useRef();
@@ -21,22 +35,30 @@ export function CustomerAvatar({ floorY = 0 }) {
   const updateAvatarState = useStore((state) => state.updateAvatarState);
   const setInteractionPrompt = useStore((state) => state.setInteractionPrompt);
   const selectedBrand = useStore((state) => state.selectedBrand);
+  const selectedCategory = useStore((state) => state.selectedCategory);
   const currentFloor = useStore((state) => state.currentFloor);
+  const targetFloor = useStore((state) => state.targetFloor);
   const phase = useStore((state) => state.phase);
+  const elevatorDoorOpen = useStore((state) => state.elevatorDoorOpen);
+  const elevatorMoving = useStore((state) => state.elevatorMoving);
   const enterBrandStore = useStore((state) => state.enterBrandStore);
-  const openProductInspect = useStore((state) => state.openProductInspect);
-  const products = useStore((state) => state.products);
+  const exitBrandStore = useStore((state) => state.exitBrandStore);
+  const travelToFloor = useStore((state) => state.travelToFloor);
 
-  // Position and movement state
+  // Position, smooth velocity, and orientation state
   const pos = useRef(new THREE.Vector3(0, floorY, 8));
   const yaw = useRef(0);
+  const forwardVel = useRef(0);
+  const turnVel = useRef(0);
+  const elevatorYRef = useRef(floorY);
+  const prevFloorRef = useRef(currentFloor);
+  const prevBrandRef = useRef(selectedBrand);
   const walkCycle = useRef(0);
   const keysDown = useRef({});
   const [isMoving, setIsMoving] = useState(false);
 
   useEffect(() => {
     const onKeyDown = (e) => {
-      // Ignore if user is inside an input/textarea
       if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
       keysDown.current[e.key.toLowerCase()] = true;
     };
@@ -52,53 +74,33 @@ export function CustomerAvatar({ floorY = 0 }) {
     };
   }, []);
 
-  useFrame((_, delta) => {
-    // Sync base Y with active floor elevation
-    pos.current.y = floorY;
-
-    if (navigationMode !== 'avatar') {
-      return;
+  // Position customer cleanly when entering/exiting a brand boutique or jumping floors
+  useEffect(() => {
+    if (prevBrandRef.current !== selectedBrand) {
+      if (selectedBrand) {
+        pos.current.set(0, floorY, 6.2);
+        yaw.current = 0; // Face into boutique
+      } else {
+        pos.current.set(0, floorY, -3.8);
+        yaw.current = Math.PI; // Face concourse
+      }
+      prevBrandRef.current = selectedBrand;
     }
+  }, [selectedBrand, floorY]);
 
-    const moveSpeed = 5.2 * delta;
-    const turnSpeed = 2.8 * delta;
-    let moving = false;
-
-    // Turning left / right
-    if (keysDown.current['a'] || keysDown.current['arrowleft']) {
-      yaw.current += turnSpeed;
+  useEffect(() => {
+    if (prevFloorRef.current !== currentFloor && phase !== 'riding' && phase !== 'toElevator') {
+      const spawnZ = currentFloor === 0 ? 7.8 : -4.2;
+      pos.current.set(0, floorY, spawnZ);
+      yaw.current = currentFloor === 0 ? 0 : Math.PI;
+      elevatorYRef.current = floorY;
+      prevFloorRef.current = currentFloor;
     }
-    if (keysDown.current['d'] || keysDown.current['arrowright']) {
-      yaw.current -= turnSpeed;
-    }
+  }, [currentFloor, floorY, phase]);
 
-    // Walking forward / backward
-    const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw.current);
-
-    if (keysDown.current['w'] || keysDown.current['arrowup']) {
-      pos.current.addScaledVector(forward, moveSpeed);
-      moving = true;
-    }
-    if (keysDown.current['s'] || keysDown.current['arrowdown']) {
-      pos.current.addScaledVector(forward, -moveSpeed * 0.65);
-      moving = true;
-    }
-
-    // Boundary constraints for safety within the mall floor
-    pos.current.x = THREE.MathUtils.clamp(pos.current.x, -14, 14);
-    pos.current.z = THREE.MathUtils.clamp(pos.current.z, -12, 12);
-
-    setIsMoving(moving);
-
-    // Apply avatar transforms
-    if (avatarGroupRef.current) {
-      avatarGroupRef.current.position.copy(pos.current);
-      avatarGroupRef.current.rotation.y = yaw.current;
-    }
-
-    // Procedural leg/arm swing walking cycle
+  const animateLimbs = (delta, moving, speedFactor = 1) => {
     if (moving) {
-      walkCycle.current += delta * 10;
+      walkCycle.current += delta * 10 * speedFactor;
       const legAngle = Math.sin(walkCycle.current) * 0.55;
       const armAngle = Math.cos(walkCycle.current) * 0.45;
 
@@ -108,33 +110,127 @@ export function CustomerAvatar({ floorY = 0 }) {
       if (rightArmRef.current) rightArmRef.current.rotation.x = armAngle;
       if (torsoRef.current) torsoRef.current.position.y = 0.95 + Math.abs(Math.sin(walkCycle.current * 2)) * 0.04;
     } else {
-      // Idle breathing
       const idle = Math.sin(Date.now() * 0.003) * 0.04;
-      if (leftLegRef.current) leftLegRef.current.rotation.x = THREE.MathUtils.lerp(leftLegRef.current.rotation.x, 0, 0.1);
-      if (rightLegRef.current) rightLegRef.current.rotation.x = THREE.MathUtils.lerp(rightLegRef.current.rotation.x, 0, 0.1);
-      if (leftArmRef.current) leftArmRef.current.rotation.x = THREE.MathUtils.lerp(leftArmRef.current.rotation.x, 0, 0.1);
-      if (rightArmRef.current) rightArmRef.current.rotation.x = THREE.MathUtils.lerp(rightArmRef.current.rotation.x, 0, 0.1);
+      if (leftLegRef.current) leftLegRef.current.rotation.x = THREE.MathUtils.lerp(leftLegRef.current.rotation.x, 0, 0.12);
+      if (rightLegRef.current) rightLegRef.current.rotation.x = THREE.MathUtils.lerp(rightLegRef.current.rotation.x, 0, 0.12);
+      if (leftArmRef.current) leftArmRef.current.rotation.x = THREE.MathUtils.lerp(leftArmRef.current.rotation.x, 0, 0.12);
+      if (rightArmRef.current) rightArmRef.current.rotation.x = THREE.MathUtils.lerp(rightArmRef.current.rotation.x, 0, 0.12);
       if (torsoRef.current) torsoRef.current.position.y = 0.95 + idle;
     }
+  };
+
+  useFrame((_, delta) => {
+    const dt = Math.min(delta, 0.05);
+
+    // ================= ELEVATOR JOURNEY SYNCHRONIZATION =================
+    if (phase === 'toElevator') {
+      // Walk smoothly toward elevator doors
+      pos.current.y = floorY;
+      pos.current.x = THREE.MathUtils.lerp(pos.current.x, 0, 3.2 * dt);
+      pos.current.z = THREE.MathUtils.lerp(pos.current.z, elevatorDoorOpen ? -6.2 : -4.8, 3.2 * dt);
+      yaw.current = THREE.MathUtils.lerp(yaw.current, 0, 5.0 * dt);
+      elevatorYRef.current = floorY;
+      animateLimbs(dt, true, 0.9);
+      if (avatarGroupRef.current) {
+        avatarGroupRef.current.position.copy(pos.current);
+        avatarGroupRef.current.rotation.y = yaw.current;
+      }
+      return;
+    }
+
+    if (phase === 'riding') {
+      const destY = FLOOR_Y_MAP[targetFloor] ?? 0;
+      if (elevatorMoving) {
+        elevatorYRef.current = THREE.MathUtils.lerp(elevatorYRef.current, destY, 1.8 * dt);
+      }
+      pos.current.set(0, elevatorYRef.current + 0.12, -7.0);
+      yaw.current = THREE.MathUtils.lerp(yaw.current, Math.PI, 4.0 * dt); // Face out through panoramic glass
+      animateLimbs(dt, false);
+      if (avatarGroupRef.current) {
+        avatarGroupRef.current.position.copy(pos.current);
+        avatarGroupRef.current.rotation.y = yaw.current;
+      }
+      return;
+    }
+
+    if (phase === 'arriving') {
+      // Step out of the panoramic elevator onto the destination floor
+      const destY = FLOOR_Y_MAP[targetFloor] ?? floorY;
+      elevatorYRef.current = destY;
+      pos.current.y = destY;
+      pos.current.x = THREE.MathUtils.lerp(pos.current.x, 0, 3.5 * dt);
+      pos.current.z = THREE.MathUtils.lerp(pos.current.z, -4.2, 2.8 * dt);
+      yaw.current = Math.PI;
+      prevFloorRef.current = targetFloor;
+      animateLimbs(dt, true, 0.85);
+      if (avatarGroupRef.current) {
+        avatarGroupRef.current.position.copy(pos.current);
+        avatarGroupRef.current.rotation.y = yaw.current;
+      }
+      return;
+    }
+
+    // Sync base Y with active floor elevation
+    pos.current.y = floorY;
+
+    if (navigationMode !== 'avatar') {
+      setInteractionPrompt(null);
+      return;
+    }
+
+    // ================= SMOOTH WASD + ARROW KEY MOVEMENT =================
+    const isSprinting = Boolean(keysDown.current['shift']);
+    const maxSpeed = isSprinting ? 7.4 : 5.2;
+    const maxTurn = 2.9;
+
+    let targetTurn = 0;
+    if (keysDown.current['a'] || keysDown.current['arrowleft']) targetTurn += maxTurn;
+    if (keysDown.current['d'] || keysDown.current['arrowright']) targetTurn -= maxTurn;
+
+    let targetSpeed = 0;
+    if (keysDown.current['w'] || keysDown.current['arrowup']) targetSpeed += maxSpeed;
+    if (keysDown.current['s'] || keysDown.current['arrowdown']) targetSpeed -= maxSpeed * 0.65;
+
+    // Smooth acceleration & deceleration
+    forwardVel.current = THREE.MathUtils.damp(forwardVel.current, targetSpeed, 10, dt);
+    turnVel.current = THREE.MathUtils.damp(turnVel.current, targetTurn, 12, dt);
+
+    yaw.current += turnVel.current * dt;
+
+    const moving = Math.abs(forwardVel.current) > 0.15;
+    if (moving) {
+      const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw.current);
+      const nextX = pos.current.x + forward.x * forwardVel.current * dt;
+      const nextZ = pos.current.z + forward.z * forwardVel.current * dt;
+
+      // Architectural collision resolution
+      const resolved = resolveMallCollisions(nextX, nextZ, currentFloor, {
+        selectedBrand,
+        elevatorDoorOpen
+      });
+      pos.current.x = resolved.x;
+      pos.current.z = resolved.z;
+    }
+
+    setIsMoving(moving);
+
+    if (avatarGroupRef.current) {
+      avatarGroupRef.current.position.copy(pos.current);
+      avatarGroupRef.current.rotation.y = yaw.current;
+    }
+
+    animateLimbs(dt, moving, isSprinting ? 1.35 : 1.0);
 
     // Sync with central store
     updateAvatarState([pos.current.x, pos.current.y, pos.current.z], yaw.current, moving);
 
     // ================= PROXIMITY DETECTION & INTERACTION ('E') =================
-    // Brand Stores Proximity on Floor 1
-    if (currentFloor === 1 && !selectedBrand) {
-      const brandStores = [
-        { brand: 'samsung', name: 'Samsung Galaxy Store', pos: [-7.5, 0] },
-        { brand: 'apple', name: 'Apple Flagship Boutique', pos: [0, -3.5] },
-        { brand: 'google', name: 'Google Pixel Studio', pos: [7.5, 0] },
-        { brand: 'oneplus', name: 'OnePlus Experience Store', pos: [-7.5, 5.5] },
-        { brand: 'nothing', name: 'Nothing Concept Store', pos: [7.5, 5.5] }
-      ];
+    let nearbyPrompt = null;
 
-      let nearbyPrompt = null;
-      for (const store of brandStores) {
+    if (currentFloor === 1 && !selectedBrand) {
+      for (const store of FLOOR1_BRAND_STORES) {
         const dist = Math.hypot(pos.current.x - store.pos[0], pos.current.z - store.pos[1]);
-        if (dist < 3.2) {
+        if (dist < 3.4) {
           nearbyPrompt = {
             text: `Press [E] to Enter ${store.name}`,
             action: () => enterBrandStore(store.brand)
@@ -142,13 +238,53 @@ export function CustomerAvatar({ floorY = 0 }) {
           break;
         }
       }
-
-      setInteractionPrompt(nearbyPrompt);
-
-      if (nearbyPrompt && keysDown.current['e']) {
-        nearbyPrompt.action();
-        keysDown.current['e'] = false;
+    } else if (selectedBrand) {
+      const exitDist = Math.hypot(pos.current.x - 0, pos.current.z - 8.2);
+      if (exitDist < 2.8) {
+        nearbyPrompt = {
+          text: 'Press [E] to Exit to Tech Avenue',
+          action: () => exitBrandStore()
+        };
       }
+    }
+
+    // Elevator proximity interaction on any concourse floor
+    if (!nearbyPrompt && !selectedBrand) {
+      const elevDist = Math.hypot(pos.current.x - 0, pos.current.z - (-5.0));
+      if (elevDist < 2.6) {
+        if (currentFloor === 0) {
+          const destFloor = selectedCategory ? resolveCategoryFloor(selectedCategory) : 1;
+          nearbyPrompt = {
+            text: selectedCategory
+              ? `Press [E] to Ride Elevator to ${selectedCategory.name} (${destFloor}F)`
+              : 'Press [E] to Ride Panoramic Glass Elevator (1F)',
+            action: () => travelToFloor(destFloor)
+          };
+        } else {
+          nearbyPrompt = {
+            text: 'Press [E] to Return to Ground Floor via Elevator',
+            action: () => travelToFloor(0)
+          };
+        }
+      }
+    }
+
+    // Ground lobby Category Directory Kiosk proximity
+    if (!nearbyPrompt && currentFloor === 0) {
+      const kioskDist = Math.hypot(pos.current.x - (-2.8), pos.current.z - 6.4);
+      if (kioskDist < 3.0) {
+        nearbyPrompt = {
+          text: 'Press [E] to Open Category Search & Directory',
+          action: () => useStore.setState({ searchOpen: true })
+        };
+      }
+    }
+
+    setInteractionPrompt(nearbyPrompt);
+
+    if (nearbyPrompt && keysDown.current['e']) {
+      nearbyPrompt.action();
+      keysDown.current['e'] = false;
     }
   });
 
