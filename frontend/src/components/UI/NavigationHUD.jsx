@@ -78,6 +78,7 @@ export function NavigationHUD() {
     { key: 'oneplus', name: 'OnePlus' },
     { key: 'xiaomi', name: 'Xiaomi' },
     { key: 'nothing', name: 'Nothing' },
+    { key: 'sony', name: 'Sony & Audio' },
   ];
 
   const currentFloorObj = floorTabs.find((f) => f.num === floorNumber) || floorTabs[0];

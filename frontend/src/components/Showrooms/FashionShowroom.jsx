@@ -1,83 +1,8 @@
-import React, { useRef, useState, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
+import React, { useMemo } from 'react';
 import { Text } from '@react-three/drei';
-import * as THREE from 'three';
 import { useStore } from '../../store/useStore';
-import { SneakerModel } from '../ProductViewer/Models3D/SneakerModel';
-import { MannequinModel } from '../ProductViewer/Models3D/MannequinModel';
-import { HandbagModel } from '../ProductViewer/Models3D/HandbagModel';
-import { SmartwatchModel } from '../ProductViewer/Models3D/SmartwatchModel';
+import { InteractiveProductPedestal } from './InteractiveProductPedestal';
 import { getCarraraMarbleTexture, getCarraraMarbleRoughnessTexture } from '../../utils/marbleTextures';
-
-function InteractiveFashionItem({ product, position, rotation = [0, 0, 0], scale = 0.6, children, label, price }) {
-  const [hovered, setHovered] = useState(false);
-  const openProductInspect = useStore((state) => state.openProductInspect);
-  const haloRef = useRef();
-
-  useFrame((_, delta) => {
-    if (haloRef.current) {
-      haloRef.current.rotation.z += delta * (hovered ? 2.5 : 0.8);
-    }
-  });
-
-  return (
-    <group
-      position={position}
-      rotation={rotation}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-        document.body.style.cursor = 'pointer';
-      }}
-      onPointerOut={() => {
-        setHovered(false);
-        document.body.style.cursor = 'auto';
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (product) openProductInspect(product);
-      }}
-    >
-      <group scale={scale} position={[0, 0.45, 0]}>
-        {children}
-      </group>
-
-      {/* Glossy White Acrylic Pedestal Base */}
-      <mesh position={[0, 0.1, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.75, 0.8, 0.2, 32]} />
-        <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.15} />
-      </mesh>
-
-      {/* Glowing Fashion Pink/Magenta Halo Ring */}
-      <mesh ref={haloRef} position={[0, 0.21, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.65, 0.72, 32]} />
-        <meshBasicMaterial
-          color={hovered ? '#FFE500' : '#EC4899'}
-          transparent
-          opacity={hovered ? 0.95 : 0.6}
-        />
-      </mesh>
-
-      {/* Floating Info Tag in Dark Navy */}
-      <group position={[0, -0.05, 0.52]}>
-        <mesh>
-          <boxGeometry args={[1.35, 0.38, 0.04]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
-        </mesh>
-        <mesh position={[0, 0.17, 0.02]}>
-          <boxGeometry args={[1.35, 0.04, 0.02]} />
-          <meshBasicMaterial color="#EC4899" />
-        </mesh>
-        <Text position={[0, 0.04, 0.03]} fontSize={0.09} color="#172B4D" fontWeight={900}>
-          {label || product?.name}
-        </Text>
-        <Text position={[0, -0.08, 0.03]} fontSize={0.08} color="#2874F0" fontWeight={800}>
-          {price || (product ? `₹${Number(product.price).toLocaleString('en-IN')}` : '')}
-        </Text>
-      </group>
-    </group>
-  );
-}
 
 // Clothing Display Rack with Hanging Garments
 function ClothingRack({ position, rotation = [0, 0, 0] }) {
@@ -203,34 +128,39 @@ function AccessoriesDisplayTable({ position }) {
 
 export function FashionShowroom({ floorY = 16 }) {
   const products = useStore((state) => state.products);
-  const sneaker = products.find((p) => p.slug === 'nike-air-max-270-react');
-  const blazer = products.find((p) => p.slug === 'armani-exchange-blazer') || {
-    id: 201,
-    name: 'Armani Exchange Tailored Slim Blazer',
-    slug: 'armani-exchange-blazer',
-    brand: 'Armani Exchange',
-    price: 18990,
-    floor_number: 2,
-    model_3d_type: 'mannequin'
-  };
-  const handbag = products.find((p) => p.slug === 'gucci-horsebit-1955') || {
-    id: 202,
-    name: 'Gucci Horsebit 1955 Leather Bag',
-    slug: 'gucci-horsebit-1955',
-    brand: 'Gucci',
-    price: 245000,
-    floor_number: 2,
-    model_3d_type: 'handbag'
-  };
-  const luxuryWatch = products.find((p) => p.slug === 'apple-watch-ultra-2') || {
-    id: 203,
-    name: 'Rolex Cosmograph Daytona',
-    slug: 'rolex-daytona',
-    brand: 'Rolex',
-    price: 1450000,
-    floor_number: 2,
-    model_3d_type: 'smartwatch'
-  };
+  const productsLoading = useStore((state) => state.productsLoading);
+  const productsError = useStore((state) => state.productsError);
+
+  // Dynamically filter Floor 2 products from Django API
+  const floor2Products = useMemo(
+    () => products.filter((p) => (p.floor_number !== undefined ? p.floor_number : p.floor) === 2),
+    [products]
+  );
+
+  // Group dynamically by fashion sub-department/model type
+  const apparelProducts = floor2Products.filter((p) => {
+    const mt = (p.model_3d?.model_type || p.model_3d_type || '').toLowerCase();
+    const cat = (p.category_name || p.category?.name || '').toLowerCase();
+    return mt === 'mannequin' || cat.includes('apparel') || cat.includes('fashion');
+  });
+  const sneakerProducts = floor2Products.filter((p) => {
+    const mt = (p.model_3d?.model_type || p.model_3d_type || '').toLowerCase();
+    const cat = (p.category_name || p.category?.name || '').toLowerCase();
+    return mt === 'shoe' || mt === 'sneaker' || cat.includes('shoe') || cat.includes('sneaker');
+  });
+  const luxuryProducts = floor2Products.filter(
+    (p) => !apparelProducts.includes(p) && !sneakerProducts.includes(p)
+  );
+  // Ensure handbag items inside Fashion & Apparel also appear in Luxury Gallery if not in apparel
+  const leftIslandProducts = apparelProducts.filter(
+    (p) => (p.model_3d?.model_type || p.model_3d_type || '').toLowerCase() !== 'handbag'
+  );
+  const centerLuxuryProducts = [
+    ...luxuryProducts,
+    ...apparelProducts.filter(
+      (p) => (p.model_3d?.model_type || p.model_3d_type || '').toLowerCase() === 'handbag'
+    )
+  ];
 
   // Luxury Carrara Marble Textures for Haute Couture Runway Concourse
   const marbleTexture = useMemo(() => getCarraraMarbleTexture(6, 5), []);
@@ -313,123 +243,114 @@ export function FashionShowroom({ floorY = 16 }) {
         </Text>
       </group>
 
-      {/* ================= 3. 3D MANNEQUINS DISPLAY ISLAND ================= */}
-      <group position={[-5.8, 0, -1.0]}>
-        <mesh position={[0, 0.25, 0]} castShadow receiveShadow>
-          <boxGeometry args={[4.4, 0.5, 2.2]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
-        </mesh>
-        <mesh position={[0, 0.02, 0]}>
-          <boxGeometry args={[4.42, 0.05, 2.22]} />
-          <meshBasicMaterial color="#EC4899" />
-        </mesh>
+      {/* Loading / Error / Empty State */}
+      {productsLoading && floor2Products.length === 0 ? (
+        <Text position={[0, 2.2, 0]} fontSize={0.28} color="#EC4899" fontWeight={900}>
+          Loading Fashion & Lifestyle Collection...
+        </Text>
+      ) : productsError && floor2Products.length === 0 ? (
+        <Text position={[0, 2.2, 0]} fontSize={0.24} color="#F43F5E" fontWeight={800}>
+          Unable to load Fashion Catalog ({productsError})
+        </Text>
+      ) : floor2Products.length === 0 ? (
+        <Text position={[0, 2.2, 0]} fontSize={0.26} color="#64748B" fontWeight={800}>
+          No Fashion products currently stocked
+        </Text>
+      ) : (
+        <>
+          {/* ================= 3. ARMANI EXCHANGE & COUTURE ISLAND ================= */}
+          <group position={[-5.8, 0, -1.0]}>
+            <mesh position={[0, 0.25, 0]} castShadow receiveShadow>
+              <boxGeometry args={[4.4, 0.5, 2.2]} />
+              <meshStandardMaterial color="#FFFFFF" roughness={0.14} metalness={0.1} />
+            </mesh>
+            <mesh position={[0, 0.02, 0]}>
+              <boxGeometry args={[4.44, 0.05, 2.24]} />
+              <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
+            </mesh>
+            <Text position={[0, 2.9, -0.8]} fontSize={0.18} color="#0F172A" fontWeight={900}>
+              ARMANI EXCHANGE COUTURE
+            </Text>
 
-        <InteractiveFashionItem
-          product={blazer}
-          position={[-1.2, 0.5, 0]}
-          label="Armani Slim Blazer"
-          price="₹18,990"
-          scale={0.55}
-        >
-          <MannequinModel color="#1E293B" />
-        </InteractiveFashionItem>
+            {leftIslandProducts.map((prod, idx) => {
+              const posX = (idx - (leftIslandProducts.length - 1) / 2) * 2.1;
+              return (
+                <InteractiveProductPedestal
+                  key={prod.id || prod.slug}
+                  product={prod}
+                  position={[posX, 0.5, 0]}
+                  worldPosition={[-5.8 + posX, 0.5, -1.0]}
+                  scale={0.55}
+                  accentColor="#EC4899"
+                  pedestalType="cylinder"
+                />
+              );
+            })}
+          </group>
 
-        <InteractiveFashionItem
-          product={blazer}
-          position={[1.2, 0.5, 0]}
-          label="Couture Velvet Gown"
-          price="₹28,500"
-          scale={0.55}
-        >
-          <MannequinModel color="#EC4899" />
-        </InteractiveFashionItem>
-      </group>
+          {/* ================= 4. NIKE SNEAKER VAULT ISLAND ================= */}
+          <group position={[5.8, 0, -1.0]}>
+            <mesh position={[0, 0.25, 0]} castShadow receiveShadow>
+              <boxGeometry args={[4.4, 0.5, 2.2]} />
+              <meshStandardMaterial color="#FFFFFF" roughness={0.14} metalness={0.1} />
+            </mesh>
+            <mesh position={[0, 0.02, 0]}>
+              <boxGeometry args={[4.44, 0.05, 2.24]} />
+              <meshBasicMaterial color="#2874F0" />
+            </mesh>
+            <Text position={[0, 2.9, -0.8]} fontSize={0.18} color="#0F172A" fontWeight={900}>
+              NIKE SNEAKER VAULT
+            </Text>
 
-      {/* ================= 4. SNEAKER VAULT DISPLAY ISLAND ================= */}
-      <group position={[5.8, 0, -1.0]}>
-        <mesh position={[0, 0.25, 0]} castShadow receiveShadow>
-          <boxGeometry args={[4.4, 0.5, 2.2]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
-        </mesh>
-        <mesh position={[0, 0.02, 0]}>
-          <boxGeometry args={[4.42, 0.05, 2.22]} />
-          <meshBasicMaterial color="#2874F0" />
-        </mesh>
+            {sneakerProducts.map((prod, idx) => {
+              const posX = (idx - (sneakerProducts.length - 1) / 2) * 2.1;
+              return (
+                <InteractiveProductPedestal
+                  key={prod.id || prod.slug}
+                  product={prod}
+                  position={[posX, 0.5, 0]}
+                  worldPosition={[5.8 + posX, 0.5, -1.0]}
+                  scale={0.55}
+                  accentColor="#2874F0"
+                  pedestalType="cylinder"
+                />
+              );
+            })}
+          </group>
 
-        <InteractiveFashionItem
-          product={sneaker}
-          position={[-1.1, 0.5, 0]}
-          label="Nike Air Max 270 (Laser)"
-          price="₹13,995"
-          scale={0.55}
-        >
-          <SneakerModel color="#0090FF" />
-        </InteractiveFashionItem>
+          {/* ================= 5. LUXURY CLOTHING DISPLAY RACK (LEFT WING) ================= */}
+          <ClothingRack position={[-11.5, 0, 2.5]} rotation={[0, Math.PI / 2, 0]} />
 
-        <InteractiveFashionItem
-          product={sneaker}
-          position={[1.1, 0.5, 0]}
-          label="Nike Air Max 270 (Black)"
-          price="₹13,995"
-          scale={0.55}
-        >
-          <SneakerModel color="#111827" />
-        </InteractiveFashionItem>
-      </group>
+          {/* ================= 6. ACCESSORIES & SUNGLASSES TABLE (RIGHT WING) ================= */}
+          <AccessoriesDisplayTable position={[11.5, 0, 2.5]} />
 
-      {/* ================= 5. LUXURY CLOTHING DISPLAY RACK (LEFT WING) ================= */}
-      <ClothingRack position={[-11.5, 0, 2.5]} rotation={[0, Math.PI / 2, 0]} />
-
-      {/* ================= 6. ACCESSORIES & SUNGLASSES TABLE (RIGHT WING) ================= */}
-      <AccessoriesDisplayTable position={[11.5, 0, 2.5]} />
-
-      {/* ================= 7. CENTER LUXURY HANDBAG & WATCH SHOWCASES ================= */}
-      <group position={[-1.8, 0, 2.2]}>
-        <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[1.1, 1.1, 0.9, 32]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.2} />
-        </mesh>
-        <mesh position={[0, 0.05, 0]}>
-          <cylinderGeometry args={[1.12, 1.12, 0.08, 32]} />
-          <meshBasicMaterial color="#EC4899" />
-        </mesh>
-
-        <InteractiveFashionItem
-          product={handbag}
-          position={[0, 0.95, 0]}
-          label="Gucci Horsebit 1955"
-          price="₹2,45,000"
-          scale={0.7}
-        >
-          <HandbagModel color="#8B4513" />
-        </InteractiveFashionItem>
-      </group>
-
-      <group position={[1.8, 0, 2.2]}>
-        <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[1.1, 1.1, 0.9, 32]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.2} />
-        </mesh>
-        <mesh position={[0, 0.05, 0]}>
-          <cylinderGeometry args={[1.12, 1.12, 0.08, 32]} />
-          <meshBasicMaterial color="#FFE500" />
-        </mesh>
-        {/* Crystal Dome Cover */}
-        <mesh position={[0, 1.25, 0]}>
-          <cylinderGeometry args={[1.0, 1.0, 0.7, 32]} />
-          <meshPhysicalMaterial color="#BAE6FD" transmission={0.92} transparent opacity={0.3} roughness={0.05} />
-        </mesh>
-
-        <InteractiveFashionItem
-          product={luxuryWatch}
-          position={[0, 0.95, 0]}
-          label="Rolex Cosmograph Daytona"
-          price="₹14,50,000"
-          scale={0.65}
-        >
-          <SmartwatchModel color="#FFE500" />
-        </InteractiveFashionItem>
-      </group>
+          {/* ================= 7. CENTER LUXURY HANDBAG & BEAUTY SHOWCASES ================= */}
+          {centerLuxuryProducts.map((prod, idx) => {
+            const posX = (idx - (centerLuxuryProducts.length - 1) / 2) * 3.6;
+            const accent = idx % 2 === 0 ? '#EC4899' : '#F43F5E';
+            return (
+              <group key={prod.id || prod.slug} position={[posX, 0, 2.2]}>
+                <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
+                  <cylinderGeometry args={[1.1, 1.1, 0.9, 32]} />
+                  <meshStandardMaterial color="#FFFFFF" roughness={0.14} metalness={0.18} />
+                </mesh>
+                <mesh position={[0, 0.05, 0]}>
+                  <cylinderGeometry args={[1.13, 1.13, 0.08, 32]} />
+                  <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
+                </mesh>
+                <InteractiveProductPedestal
+                  product={prod}
+                  position={[0, 0.95, 0]}
+                  worldPosition={[posX, 0.95, 2.2]}
+                  scale={0.65}
+                  accentColor={accent}
+                  pedestalType="cylinder"
+                />
+              </group>
+            );
+          })}
+        </>
+      )}
     </group>
   );
 }

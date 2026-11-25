@@ -14,7 +14,8 @@ const FLOOR1_BRAND_STORES = [
   { brand: 'google', name: 'Google Pixel Studio', pos: [-8.5, 3.5] },
   { brand: 'oneplus', name: 'OnePlus Experience Store', pos: [8.5, 3.5] },
   { brand: 'xiaomi', name: 'Xiaomi Leica Gallery', pos: [0, -11.5] },
-  { brand: 'nothing', name: 'Nothing Concept Store', pos: [0, 9.5] }
+  { brand: 'nothing', name: 'Nothing Concept Store', pos: [-6.0, 9.5] },
+  { brand: 'sony', name: 'Sony & Audio Studio', pos: [6.0, 9.5] }
 ];
 
 /**

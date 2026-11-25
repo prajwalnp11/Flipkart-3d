@@ -89,6 +89,8 @@ export const useExperienceStore = create((set, get) => ({
   categoriesLoading: false,
   categoriesError: null,
   products: DEFAULT_PRODUCTS,
+  productsLoading: false,
+  productsError: null,
   cart: { items: [], total_items: 0, subtotal: 0, discount: 0, delivery_fee: 0, total_amount: 0 },
   wishlist: [],
   searchResults: [],
@@ -125,7 +127,12 @@ export const useExperienceStore = create((set, get) => ({
 
   // Initialize data from Django API with fallback preservation
   initData: async () => {
-    set({ categoriesLoading: true, categoriesError: null });
+    set({
+      categoriesLoading: true,
+      categoriesError: null,
+      productsLoading: true,
+      productsError: null
+    });
     try {
       const [floors, categories, products, cart] = await Promise.all([
         api.getFloors(),
@@ -134,12 +141,15 @@ export const useExperienceStore = create((set, get) => ({
         api.getCart()
       ]);
       const validCategories = Array.isArray(categories) && categories.length > 0 ? categories : DEFAULT_CATEGORIES;
+      const validProducts = Array.isArray(products) && products.length > 0 ? products : DEFAULT_PRODUCTS;
       set({
         floors: Array.isArray(floors) && floors.length > 0 ? floors : DEFAULT_FLOORS,
         categories: validCategories,
         categoriesLoading: false,
         categoriesError: null,
-        products: Array.isArray(products) && products.length > 0 ? products : DEFAULT_PRODUCTS,
+        products: validProducts,
+        productsLoading: false,
+        productsError: null,
         cart: cart && cart.items ? cart : get().cart
       });
     } catch (err) {
@@ -147,7 +157,31 @@ export const useExperienceStore = create((set, get) => ({
       set({
         categories: get().categories?.length > 0 ? get().categories : DEFAULT_CATEGORIES,
         categoriesLoading: false,
-        categoriesError: err.message || 'Network connection offline'
+        categoriesError: err.message || 'Network connection offline',
+        products: get().products?.length > 0 ? get().products : DEFAULT_PRODUCTS,
+        productsLoading: false,
+        productsError: err.message || 'Network connection offline'
+      });
+    }
+  },
+
+  // On-demand Product reload with error handling & retry
+  fetchProducts: async (params = {}) => {
+    set({ productsLoading: true, productsError: null });
+    try {
+      const data = await api.getProducts(params);
+      if (Array.isArray(data)) {
+        set({ products: data, productsLoading: false, productsError: null });
+      } else {
+        set({
+          productsLoading: false,
+          productsError: 'Server returned invalid product catalog'
+        });
+      }
+    } catch (err) {
+      set({
+        productsLoading: false,
+        productsError: err.message || 'Failed to fetch products'
       });
     }
   },

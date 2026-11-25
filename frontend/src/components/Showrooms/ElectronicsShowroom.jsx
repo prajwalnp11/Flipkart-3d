@@ -1,108 +1,49 @@
-import React, { useRef, useState, useMemo } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Text, Float } from '@react-three/drei';
-import * as THREE from 'three';
+import React, { useState, useMemo } from 'react';
+import { Text } from '@react-three/drei';
 import { useStore } from '../../store/useStore';
 import { AutomaticStoreDoors } from '../Entrance/AutomaticStoreDoors';
-import { DynamicProductModel } from '../ProductViewer/DynamicProductModel';
+import { InteractiveProductPedestal } from './InteractiveProductPedestal';
 import { getCarraraMarbleTexture, getCarraraMarbleRoughnessTexture } from '../../utils/marbleTextures';
 
-// Interactive Product Table / Display Counter in the Showroom
-function InteractiveDisplayItem({ product, position, rotation = [0, 0, 0], scale = 0.55, children, label, brand, price, fallbackColor }) {
-  const [hovered, setHovered] = useState(false);
-  const openProductInspect = useStore((state) => state.openProductInspect);
-  const haloRef = useRef();
-
-  useFrame((_, delta) => {
-    if (haloRef.current) {
-      haloRef.current.rotation.z += delta * (hovered ? 2.5 : 0.8);
-    }
-  });
-
+// Illuminated Architectural Wall Display Shelving inside Brand Boutiques
+function BoutiqueWallShelving({ position, rotation = [0, 0, 0], accentColor = '#2874F0', title = 'SIGNATURE SERIES' }) {
   return (
-    <group
-      position={position}
-      rotation={rotation}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-        document.body.style.cursor = 'pointer';
-      }}
-      onPointerOut={() => {
-        setHovered(false);
-        document.body.style.cursor = 'auto';
-      }}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (product) openProductInspect(product);
-      }}
-    >
-      {/* 3D Product Geometry on Stand */}
-      <group scale={scale} position={[0, 0.45, 0]}>
-        {children || (
-          <DynamicProductModel
-            product={product}
-            fallbackColor={fallbackColor || '#2874F0'}
-            standMode
-            isHovered={hovered}
-          />
-        )}
-      </group>
-
-      {/* Tilted Acrylic Display Stand */}
-      <mesh position={[0, 0.15, 0]} rotation={[-0.2, 0, 0]} castShadow>
-        <boxGeometry args={[0.7, 0.1, 0.7]} />
-        <meshPhysicalMaterial
-          color="#FFFFFF"
-          transmission={0.85}
-          transparent
-          opacity={0.4}
-          roughness={0.1}
-          metalness={0.1}
-        />
+    <group position={position} rotation={rotation}>
+      {/* Brushed Titanium Backing Wall */}
+      <mesh position={[0, 2.2, -0.25]} castShadow receiveShadow>
+        <boxGeometry args={[5.6, 4.4, 0.2]} />
+        <meshStandardMaterial color="#0F172A" roughness={0.28} metalness={0.75} />
       </mesh>
-
-      {/* Glowing Interactive Halo Ring on Table Surface */}
-      <mesh ref={haloRef} position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.55, 0.62, 32]} />
-        <meshBasicMaterial
-          color={hovered ? '#FFE500' : '#2874F0'}
-          transparent
-          opacity={hovered ? 0.95 : 0.5}
-        />
+      {/* Champagne Gold Perimeter Frame */}
+      <mesh position={[0, 4.42, -0.14]}>
+        <boxGeometry args={[5.68, 0.06, 0.08]} />
+        <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
       </mesh>
-
-      {/* Floating Info Tag */}
-      <group position={[0, -0.15, 0.52]}>
-        <mesh>
-          <boxGeometry args={[1.35, 0.42, 0.04]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
-        </mesh>
-        <mesh position={[0, 0.19, 0.02]}>
-          <boxGeometry args={[1.35, 0.04, 0.02]} />
-          <meshBasicMaterial color="#2874F0" />
-        </mesh>
-        <Text
-          position={[0, 0.06, 0.03]}
-          fontSize={0.095}
-          color="#172B4D"
-          anchorX="center"
-          anchorY="middle"
-          fontWeight={900}
-        >
-          {label || product?.name}
-        </Text>
-        <Text
-          position={[0, -0.09, 0.03]}
-          fontSize={0.08}
-          color="#2874F0"
-          anchorX="center"
-          anchorY="middle"
-          fontWeight={800}
-        >
-          {price || (product ? `₹${Number(product.price).toLocaleString('en-IN')}` : '')}
-        </Text>
-      </group>
+      {/* Illuminated Backlit Glass Shelves */}
+      {[0.95, 2.05, 3.15].map((y, idx) => (
+        <group key={idx} position={[0, y, 0.12]}>
+          <mesh castShadow receiveShadow>
+            <boxGeometry args={[5.0, 0.06, 0.55]} />
+            <meshPhysicalMaterial
+              color="#F8FAFC"
+              transmission={0.75}
+              transparent
+              opacity={0.75}
+              roughness={0.08}
+              metalness={0.15}
+            />
+          </mesh>
+          {/* Warm Concealed Shelf LED Strip */}
+          <mesh position={[0, -0.04, -0.2]}>
+            <boxGeometry args={[4.95, 0.02, 0.04]} />
+            <meshBasicMaterial color={accentColor} />
+          </mesh>
+        </group>
+      ))}
+      <Text position={[0, 3.95, -0.12]} fontSize={0.2} color="#FFFFFF" fontWeight={900} letterSpacing={0.08}>
+        {title}
+      </Text>
+      <pointLight position={[0, 3.6, 0.9]} intensity={1.2} distance={5} color="#FFF8E7" />
     </group>
   );
 }
@@ -264,17 +205,28 @@ function BrandStorefrontPortal({ position, rotation, brandKey, name, tagline, co
 
 export function ElectronicsShowroom({ floorY = 8 }) {
   const products = useStore((state) => state.products);
+  const productsLoading = useStore((state) => state.productsLoading);
+  const productsError = useStore((state) => state.productsError);
   const selectedBrand = useStore((state) => state.selectedBrand);
   const enterBrandStore = useStore((state) => state.enterBrandStore);
   const exitBrandStore = useStore((state) => state.exitBrandStore);
+  const avatarPosition = useStore((state) => state.avatarPosition);
+  const navigationMode = useStore((state) => state.navigationMode);
+  const currentFloor = useStore((state) => state.currentFloor);
 
-  // Filter products by brand when inside a brand store
-  const appleProducts = products.filter((p) => p.brand?.toLowerCase() === 'apple');
-  const samsungProducts = products.filter((p) => p.brand?.toLowerCase() === 'samsung');
-  const googleProducts = products.filter((p) => p.brand?.toLowerCase() === 'google');
-  const oneplusProducts = products.filter((p) => p.brand?.toLowerCase() === 'oneplus');
-  const xiaomiProducts = products.filter((p) => p.brand?.toLowerCase() === 'xiaomi');
-  const nothingProducts = products.filter((p) => p.brand?.toLowerCase() === 'nothing');
+  // Filter Floor 1 products dynamically by brand from Django catalog
+  const floor1Products = useMemo(
+    () => products.filter((p) => (p.floor_number !== undefined ? p.floor_number : p.floor ?? 1) === 1),
+    [products]
+  );
+
+  const appleProducts = floor1Products.filter((p) => p.brand?.toLowerCase() === 'apple');
+  const samsungProducts = floor1Products.filter((p) => p.brand?.toLowerCase() === 'samsung');
+  const googleProducts = floor1Products.filter((p) => p.brand?.toLowerCase() === 'google');
+  const oneplusProducts = floor1Products.filter((p) => p.brand?.toLowerCase() === 'oneplus');
+  const xiaomiProducts = floor1Products.filter((p) => p.brand?.toLowerCase() === 'xiaomi');
+  const nothingProducts = floor1Products.filter((p) => p.brand?.toLowerCase() === 'nothing');
+  const sonyAudioProducts = floor1Products.filter((p) => ['sony', 'jbl', 'bose'].includes(p.brand?.toLowerCase()));
 
   // Active Brand Store Data
   const BRAND_CONFIGS = {
@@ -325,10 +277,24 @@ export function ElectronicsShowroom({ floorY = 8 }) {
       floorColor: '#111827',
       accentColor: '#00F0FF',
       products: nothingProducts
+    },
+    sony: {
+      name: 'Sony & Audio Studio',
+      tagline: 'Master Optics • Spatial ANC Audio & JBL Sound',
+      themeColor: '#0EA5E9',
+      floorColor: '#0B132B',
+      accentColor: '#38BDF8',
+      products: sonyAudioProducts
     }
   };
 
   const currentBrandConfig = selectedBrand ? BRAND_CONFIGS[selectedBrand] : null;
+  const exitDoorsOpen =
+    Boolean(selectedBrand) &&
+    navigationMode === 'avatar' &&
+    currentFloor === 1 &&
+    Array.isArray(avatarPosition) &&
+    Math.hypot(avatarPosition[0] - 0, avatarPosition[2] - 8.5) < 3.4;
 
   // Luxury Carrara Marble Textures for Floor Concourse
   const marbleTexture = useMemo(() => getCarraraMarbleTexture(6, 5), []);
@@ -452,8 +418,8 @@ export function ElectronicsShowroom({ floorY = 8 }) {
 
           {/* 6. Nothing Concept Store */}
           <BrandStorefrontPortal
-            position={[0, 0, 9.5]}
-            rotation={[0, Math.PI, 0]}
+            position={[-6.0, 0, 9.5]}
+            rotation={[0, Math.PI * 0.85, 0]}
             brandKey="nothing"
             name="Nothing"
             tagline="Transparent Glyph Futurism"
@@ -461,24 +427,67 @@ export function ElectronicsShowroom({ floorY = 8 }) {
             logoColor="#FFFFFF"
             onEnter={() => enterBrandStore('nothing')}
           />
+
+          {/* 7. Sony & JBL Audio / Camera Studio */}
+          <BrandStorefrontPortal
+            position={[6.0, 0, 9.5]}
+            rotation={[0, -Math.PI * 0.85, 0]}
+            brandKey="sony"
+            name="Sony & Audio"
+            tagline="Master Optics • ANC Audio & JBL Sound"
+            color="#0EA5E9"
+            logoColor="#FFFFFF"
+            onEnter={() => enterBrandStore('sony')}
+          />
         </group>
       )}
 
       {/* ================= MODE B: EXCLUSIVE BRAND BOUTIQUE (Section 6) ================= */}
       {selectedBrand && currentBrandConfig && (
         <group>
-          {/* Custom Brand Showroom Floor */}
+          {/* Custom Brand Showroom Floor with Subtle Marble Reflection */}
           <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
             <planeGeometry args={[26, 22]} />
             <meshStandardMaterial
               color={currentBrandConfig.floorColor}
-              roughness={0.15}
-              metalness={0.3}
+              roughness={0.14}
+              metalness={0.25}
+              envMapIntensity={1.2}
             />
           </mesh>
 
+          {/* Champagne Gold Floor Perimeter Inlay */}
+          <mesh position={[0, -0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[7.8, 7.9, 64]} />
+            <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
+          </mesh>
+
+          {/* Warm Boutique Ceiling Illumination */}
+          <pointLight position={[0, 5.5, 0]} intensity={1.8} distance={14} color="#FFFBF5" />
+          <pointLight position={[0, 4.5, -3.5]} intensity={1.2} distance={10} color="#FFF8E7" />
+
+          {/* Brand Architectural Back Wall */}
+          <mesh position={[0, 3.2, -7.8]} receiveShadow>
+            <boxGeometry args={[22, 6.4, 0.4]} />
+            <meshStandardMaterial color="#0F172A" roughness={0.25} metalness={0.6} />
+          </mesh>
+
+          {/* Left & Right Illuminated Wall Display Shelving */}
+          <BoutiqueWallShelving
+            position={[-9.2, 0, 0]}
+            rotation={[0, Math.PI / 2, 0]}
+            accentColor={currentBrandConfig.themeColor}
+            title={`${currentBrandConfig.name.toUpperCase()} SHOWCASE`}
+          />
+          <BoutiqueWallShelving
+            position={[9.2, 0, 0]}
+            rotation={[0, -Math.PI / 2, 0]}
+            accentColor={currentBrandConfig.themeColor}
+            title="FLAGSHIP LINEUP"
+          />
+
           {/* Brand Overhead Billboard & Header Sign */}
-          <group position={[0, 5.4, -7.5]}>
+          <group position={[0, 5.4, -7.45]}>
             <mesh>
               <boxGeometry args={[13, 1.3, 0.08]} />
               <meshStandardMaterial color="#0F172A" roughness={0.2} metalness={0.8} />
@@ -512,53 +521,94 @@ export function ElectronicsShowroom({ floorY = 8 }) {
               position={[0, 0, 0]}
               width={3.4}
               height={3.0}
-              isOpen={false}
+              isOpen={exitDoorsOpen}
               brandName="EXIT TO TECH AVENUE"
               brandColor="#2874F0"
               onTriggerEnter={exitBrandStore}
             />
           </group>
 
-          {/* Brand Product Island Counters (Strictly that Brand's Catalog) */}
-          <group position={[0, 0, 0]}>
-            {/* White Gloss Island Display Counter */}
-            <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
-              <boxGeometry args={[7.2, 0.9, 2.4]} />
-              <meshStandardMaterial color="#FFFFFF" roughness={0.12} metalness={0.1} />
-            </mesh>
-            <mesh position={[0, 0.04, 0]}>
-              <boxGeometry args={[7.24, 0.08, 2.44]} />
-              <meshBasicMaterial color={currentBrandConfig.themeColor} />
-            </mesh>
+          {/* Loading / Error / Empty / Dynamic Catalog Display */}
+          {productsLoading && currentBrandConfig.products.length === 0 ? (
+            <Text position={[0, 1.6, 0]} fontSize={0.24} color={currentBrandConfig.accentColor} fontWeight={900}>
+              Loading {currentBrandConfig.name} Catalog...
+            </Text>
+          ) : productsError && currentBrandConfig.products.length === 0 ? (
+            <Text position={[0, 1.6, 0]} fontSize={0.22} color="#F43F5E" fontWeight={800}>
+              Unable to load products ({productsError})
+            </Text>
+          ) : currentBrandConfig.products.length === 0 ? (
+            <Text position={[0, 1.6, 0]} fontSize={0.24} color="#94A3B8" fontWeight={800}>
+              No active devices currently stocked in this boutique
+            </Text>
+          ) : (
+            (() => {
+              const primaryRow = currentBrandConfig.products.slice(0, 4);
+              const secondaryRow = currentBrandConfig.products.slice(4);
+              const primarySpacing = primaryRow.length > 3 ? 1.8 : 2.3;
+              const primaryWidth = Math.max(4.8, primaryRow.length * primarySpacing + 1.0);
 
-            {/* Display Products of this Brand */}
-            {currentBrandConfig.products.length > 0 ? (
-              (() => {
-                const displayProducts = currentBrandConfig.products.slice(0, Math.min(currentBrandConfig.products.length, 4));
-                const count = displayProducts.length;
-                const spacing = count > 3 ? 1.7 : 2.2;
-                return displayProducts.map((prod, idx) => {
-                  const posX = (idx - (count - 1) / 2) * spacing;
-                  return (
-                    <InteractiveDisplayItem
-                      key={prod.id || prod.slug}
-                      product={prod}
-                      position={[posX, 0.9, 0]}
-                      label={prod.name}
-                      brand={prod.brand}
-                      price={`₹${Number(prod.price).toLocaleString('en-IN')}`}
-                      scale={0.52}
-                      fallbackColor={currentBrandConfig.accentColor}
-                    />
-                  );
-                });
-              })()
-            ) : (
-              <Text position={[0, 1.2, 0]} fontSize={0.25} color="#172B4D" fontWeight={900}>
-                Flagship Devices on Display
-              </Text>
-            )}
-          </group>
+              return (
+                <group>
+                  {/* Primary Center Flagship Display Table */}
+                  <group position={[0, 0, 0]}>
+                    <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
+                      <boxGeometry args={[primaryWidth, 0.9, 2.4]} />
+                      <meshStandardMaterial color="#FFFFFF" roughness={0.12} metalness={0.1} />
+                    </mesh>
+                    <mesh position={[0, 0.04, 0]}>
+                      <boxGeometry args={[primaryWidth + 0.06, 0.08, 2.46]} />
+                      <meshBasicMaterial color={currentBrandConfig.themeColor} />
+                    </mesh>
+
+                    {primaryRow.map((prod, idx) => {
+                      const posX = (idx - (primaryRow.length - 1) / 2) * primarySpacing;
+                      return (
+                        <InteractiveProductPedestal
+                          key={prod.id || prod.slug}
+                          product={prod}
+                          position={[posX, 0.9, 0]}
+                          worldPosition={[posX, 0.9, 0]}
+                          scale={0.52}
+                          accentColor={currentBrandConfig.themeColor}
+                          pedestalType="acrylic"
+                        />
+                      );
+                    })}
+                  </group>
+
+                  {/* Secondary Rear Showcase Table for Brands with >4 Products (e.g. Apple AirPods Max) */}
+                  {secondaryRow.length > 0 && (
+                    <group position={[0, 0, -4.0]}>
+                      <mesh position={[0, 0.45, 0]} castShadow receiveShadow>
+                        <boxGeometry args={[Math.max(3.6, secondaryRow.length * 2.3 + 1.0), 0.9, 2.1]} />
+                        <meshStandardMaterial color="#FFFFFF" roughness={0.12} metalness={0.1} />
+                      </mesh>
+                      <mesh position={[0, 0.04, 0]}>
+                        <boxGeometry args={[Math.max(3.66, secondaryRow.length * 2.3 + 1.06), 0.08, 2.16]} />
+                        <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
+                      </mesh>
+
+                      {secondaryRow.map((prod, idx) => {
+                        const posX = (idx - (secondaryRow.length - 1) / 2) * 2.2;
+                        return (
+                          <InteractiveProductPedestal
+                            key={prod.id || prod.slug}
+                            product={prod}
+                            position={[posX, 0.9, 0]}
+                            worldPosition={[posX, 0.9, -4.0]}
+                            scale={0.52}
+                            accentColor={currentBrandConfig.themeColor}
+                            pedestalType="acrylic"
+                          />
+                        );
+                      })}
+                    </group>
+                  )}
+                </group>
+              );
+            })()
+          )}
         </group>
       )}
     </group>

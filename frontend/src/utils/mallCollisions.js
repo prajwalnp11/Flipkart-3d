@@ -88,14 +88,19 @@ export function resolveMallCollisions(rawX, rawZ, floor = 0, { selectedBrand = n
   let x = rawX;
   let z = rawZ;
 
-  // 1. Outer architectural walls (narrower inside a brand boutique)
+  // 1. Outer architectural walls (narrower inside a brand boutique with wall shelving)
   if (selectedBrand) {
-    x = Math.max(-11.5, Math.min(11.5, x));
-    z = Math.max(-6.5, Math.min(8.2, z));
+    x = Math.max(-8.3, Math.min(8.3, x));
+    z = Math.max(-6.8, Math.min(8.2, z));
 
-    // Brand boutique center display counter (ElectronicsShowroom Mode B: 7.2 x 2.4 at [0, 0])
-    const counterRes = pushOutAABB(x, z, { minX: -3.6, maxX: 3.6, minZ: -1.2, maxZ: 1.2 }, AVATAR_RADIUS);
-    return counterRes;
+    // Brand boutique primary display table (center [0, 0])
+    const counterRes = pushOutAABB(x, z, { minX: -4.1, maxX: 4.1, minZ: -1.25, maxZ: 1.25 }, AVATAR_RADIUS);
+    x = counterRes.x;
+    z = counterRes.z;
+
+    // Secondary showcase table at [0, -4.0]
+    const rearRes = pushOutAABB(x, z, { minX: -2.2, maxX: 2.2, minZ: -5.05, maxZ: -2.95 }, AVATAR_RADIUS);
+    return rearRes;
   }
 
   // Main mall concourse outer walls
