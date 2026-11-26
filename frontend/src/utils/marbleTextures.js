@@ -17,15 +17,15 @@ export function getCarraraMarbleTexture(repeatX = 8, repeatY = 8) {
     canvas.height = 1024;
     const ctx = canvas.getContext('2d');
 
-    // 1. Luminous Base Warm White Porcelain Tone
-    ctx.fillStyle = '#FAFBFD';
+    // 1. Luminous Warm Cream Calacatta Marble Base Tone
+    ctx.fillStyle = '#F5EFE6';
     ctx.fillRect(0, 0, 1024, 1024);
 
-    // 2. Soft Clouding & Mineral Undertones
-    const grad1 = ctx.createRadialGradient(512, 512, 100, 512, 512, 600);
-    grad1.addColorStop(0, 'rgba(241, 245, 249, 0.5)');
-    grad1.addColorStop(0.5, 'rgba(248, 250, 252, 0.2)');
-    grad1.addColorStop(1, 'rgba(226, 232, 240, 0.45)');
+    // 2. Soft Warm Stone Clouding & Mineral Undertones
+    const grad1 = ctx.createRadialGradient(512, 512, 100, 512, 512, 620);
+    grad1.addColorStop(0, 'rgba(250, 246, 239, 0.55)');
+    grad1.addColorStop(0.5, 'rgba(241, 234, 222, 0.3)');
+    grad1.addColorStop(1, 'rgba(222, 211, 194, 0.45)');
     ctx.fillStyle = grad1;
     ctx.fillRect(0, 0, 1024, 1024);
 
@@ -58,12 +58,12 @@ export function getCarraraMarbleTexture(repeatX = 8, repeatY = 8) {
       [[0, 480], [180, 560], [310, 520], [520, 690], [740, 740], [1024, 910]]
     ];
 
-    // Under-Vein Soft Smudges (feathers)
+    // Under-Vein Soft Warm Taupe & Gold Smudges (feathers)
     majorVeins.forEach((pts) => {
-      drawVein(pts, 18, '#94A3B8', 0.08);
-      drawVein(pts, 9, '#64748B', 0.12);
-      drawVein(pts, 3.5, '#475569', 0.22);
-      drawVein(pts, 1.2, '#334155', 0.35);
+      drawVein(pts, 18, '#B8AA96', 0.12);
+      drawVein(pts, 9, '#9C8D79', 0.16);
+      drawVein(pts, 3.5, '#7E6F5D', 0.24);
+      drawVein(pts, 1.2, '#C5A880', 0.35);
     });
 
     // Secondary Branching Hairline Veins

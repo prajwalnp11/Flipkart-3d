@@ -74,32 +74,81 @@ function RetailStorefront({ position, rotation, brandName, tagline, categoryBadg
 
       {/* 4. Warm Boutique Interior Display visible inside the store */}
       <group position={[0, 1.4, -0.8]}>
-        {/* Warm Interior Back Wall */}
+        {/* Warm Ivory & Wood Interior Back Wall */}
         <mesh position={[0, 1.5, -1.2]}>
           <planeGeometry args={[6.8, 5.8]} />
-          <meshStandardMaterial color="#F8FAFC" roughness={0.3} />
+          <meshStandardMaterial color="#EFE7DA" roughness={0.35} />
         </mesh>
-        {/* Boutique Illuminated Feature Display Shelf */}
-        <mesh position={[0, 1.8, -1.1]}>
-          <boxGeometry args={[4.8, 0.08, 0.5]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.2} metalness={0.1} />
+        {/* Warm Walnut Feature Accent Panel */}
+        <mesh position={[0, 1.5, -1.16]}>
+          <boxGeometry args={[3.2, 4.8, 0.04]} />
+          <meshStandardMaterial color="#7C5836" roughness={0.45} metalness={0.1} />
         </mesh>
-        <mesh position={[0, 1.1, -1.1]}>
+        {/* Boutique Illuminated Feature Display Shelves */}
+        <mesh position={[0, 1.8, -1.05]}>
           <boxGeometry args={[4.8, 0.08, 0.5]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.2} metalness={0.1} />
+          <meshStandardMaterial color="#F5EFE6" roughness={0.2} metalness={0.1} />
+        </mesh>
+        <mesh position={[0, 1.1, -1.05]}>
+          <boxGeometry args={[4.8, 0.08, 0.5]} />
+          <meshStandardMaterial color="#F5EFE6" roughness={0.2} metalness={0.1} />
         </mesh>
 
         {/* Central Pedestal Display Vitrine with Warm Interior Spotlight */}
         <mesh position={[0, 0, 0]}>
           <cylinderGeometry args={[0.55, 0.6, 0.9, 24]} />
-          <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
+          <meshStandardMaterial color="#F5EFE6" roughness={0.15} metalness={0.1} />
         </mesh>
         <mesh position={[0, 0.46, 0]}>
           <cylinderGeometry args={[0.56, 0.56, 0.04, 24]} />
-          <meshStandardMaterial color="#CBD5E1" metalness={0.9} roughness={0.15} />
+          <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
         </mesh>
         {/* Interior Boutique Warm Downlight */}
         <pointLight position={[0, 2.8, 0]} intensity={1.8} distance={8} color="#FEF3C7" />
+      </group>
+    </group>
+  );
+}
+
+// Comfortable Mall Lounge Seating & Decorative Indoor Planter
+function LuxuryLoungeBench({ position, rotation = [0, 0, 0] }) {
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Champagne Brass Frame */}
+      <mesh position={[0, 0.18, 0]} castShadow>
+        <boxGeometry args={[2.3, 0.08, 0.88]} />
+        <meshStandardMaterial color="#C5A880" metalness={0.88} roughness={0.2} />
+      </mesh>
+      {/* Four Brass Legs */}
+      {[[-1.0, -0.35], [1.0, -0.35], [-1.0, 0.35], [1.0, 0.35]].map(([lx, lz], i) => (
+        <mesh key={i} position={[lx, 0.09, lz]} castShadow>
+          <cylinderGeometry args={[0.03, 0.025, 0.18, 12]} />
+          <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
+        </mesh>
+      ))}
+      {/* Plush Cognac Leather Seat Cushion */}
+      <mesh position={[0, 0.3, 0]} castShadow receiveShadow>
+        <boxGeometry args={[2.24, 0.18, 0.84]} />
+        <meshStandardMaterial color="#8B5A2B" roughness={0.55} metalness={0.05} />
+      </mesh>
+      {/* Decorative Side Planter with Lush Foliage */}
+      <group position={[1.55, 0, 0]}>
+        <mesh position={[0, 0.25, 0]} castShadow>
+          <cylinderGeometry args={[0.32, 0.26, 0.5, 20]} />
+          <meshStandardMaterial color="#EAE0D0" roughness={0.25} metalness={0.15} />
+        </mesh>
+        <mesh position={[0, 0.52, 0]}>
+          <cylinderGeometry args={[0.33, 0.33, 0.04, 20]} />
+          <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, 0.82, 0]} castShadow>
+          <sphereGeometry args={[0.36, 14, 14]} />
+          <meshStandardMaterial color="#2D6A4F" roughness={0.75} />
+        </mesh>
+        <mesh position={[0.12, 1.05, 0.08]} castShadow>
+          <sphereGeometry args={[0.24, 12, 12]} />
+          <meshStandardMaterial color="#40916C" roughness={0.75} />
+        </mesh>
       </group>
     </group>
   );
@@ -111,47 +160,53 @@ export function MallArchitecture() {
 
   return (
     <group position={[0, 0, 0]}>
-      {/* ================= 1. PHOTOREALISTIC POLISHED CARRARA MARBLE GROUND FLOOR ================= */}
+      {/* ================= 1. PHOTOREALISTIC WARM CALACATTA MARBLE GROUND FLOOR ================= */}
       <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[44, 38]} />
         <meshStandardMaterial
           map={marbleMap}
           roughnessMap={marbleRoughnessMap}
-          color="#FFFFFF"
-          roughness={0.11}
-          metalness={0.25}
-          envMapIntensity={1.8}
+          color="#FAF6EE"
+          roughness={0.12}
+          metalness={0.22}
+          envMapIntensity={1.6}
         />
       </mesh>
 
-      {/* Decorative Polished Architectural Floor Inlay Border Medallions (Satin Nickel & Gold) */}
+      {/* Decorative Polished Architectural Floor Inlay Border Medallions (Champagne Gold & Bronze) */}
       <mesh position={[0, 0.01, 2.5]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[6.8, 6.95, 64]} />
-        <meshStandardMaterial color="#CBD5E1" metalness={0.92} roughness={0.18} />
+        <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
       </mesh>
       <mesh position={[0, 0.01, 2.5]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[7.15, 7.25, 64]} />
-        <meshStandardMaterial color="#E2E8F0" metalness={0.92} roughness={0.18} />
+        <meshStandardMaterial color="#8B6F47" metalness={0.88} roughness={0.2} />
       </mesh>
 
-      {/* ================= 2. FULL-HEIGHT RETAIL STOREFRONTS (West & East Wings) ================= */}
+      {/* Ground-Floor Lounge Seating & Indoor Planters */}
+      <LuxuryLoungeBench position={[-5.2, 0, 10.2]} rotation={[0, Math.PI / 8, 0]} />
+      <LuxuryLoungeBench position={[5.2, 0, 10.2]} rotation={[0, -Math.PI / 8, 0]} />
+      <LuxuryLoungeBench position={[-10.2, 0, -0.5]} rotation={[0, Math.PI / 2, 0]} />
+      <LuxuryLoungeBench position={[10.2, 0, -0.5]} rotation={[0, -Math.PI / 2, 0]} />
+
+      {/* ================= 2. FULL-HEIGHT RETAIL STOREFRONTS (Ground & Upper Wings) ================= */}
       {/* West Wing Storefronts (Ground Floor) */}
       <RetailStorefront
-        position={[-18.2, 0, -4.5]}
+        position={[-16.8, 0, -4.5]}
         rotation={[0, Math.PI / 2, 0]}
         brandName="APPLE STORE"
         tagline="Titanium Innovation • Pro Performance"
         brandColor="#0284C7"
       />
       <RetailStorefront
-        position={[-18.2, 0, 4.5]}
+        position={[-16.8, 0, 4.5]}
         rotation={[0, Math.PI / 2, 0]}
         brandName="ONEPLUS FLAGSHIP"
         tagline="Never Settle • Hasselblad Camera"
         brandColor="#EB0029"
       />
       <RetailStorefront
-        position={[-18.2, 0, 13.5]}
+        position={[-16.8, 0, 13.5]}
         rotation={[0, Math.PI / 2, 0]}
         brandName="SEPHORA LUXURY"
         tagline="Haute Fragrances & Skincare"
@@ -160,25 +215,57 @@ export function MallArchitecture() {
 
       {/* East Wing Storefronts (Ground Floor) */}
       <RetailStorefront
-        position={[18.2, 0, -4.5]}
+        position={[16.8, 0, -4.5]}
         rotation={[0, -Math.PI / 2, 0]}
         brandName="SAMSUNG GALAXY"
         tagline="Galaxy AI • 200MP Quad Tele"
         brandColor="#2874F0"
       />
       <RetailStorefront
-        position={[18.2, 0, 4.5]}
+        position={[16.8, 0, 4.5]}
         rotation={[0, -Math.PI / 2, 0]}
         brandName="LEICA GALLERIA"
         tagline="1-inch Optical Beast & Optics"
         brandColor="#FF6900"
       />
       <RetailStorefront
-        position={[18.2, 0, 13.5]}
+        position={[16.8, 0, 13.5]}
         rotation={[0, -Math.PI / 2, 0]}
         brandName="WEST ELM LIVING"
         tagline="Modern Architectural Furniture"
         brandColor="#10B981"
+      />
+
+      {/* Floor 1 Visible Upper Storefronts */}
+      <RetailStorefront
+        position={[-16.8, 8, 0]}
+        rotation={[0, Math.PI / 2, 0]}
+        brandName="SONY & AUDIO"
+        tagline="Master ANC Headphones & Alpha"
+        brandColor="#0EA5E9"
+      />
+      <RetailStorefront
+        position={[16.8, 8, 0]}
+        rotation={[0, -Math.PI / 2, 0]}
+        brandName="GOOGLE PIXEL"
+        tagline="Engineered by Google • Gemini AI"
+        brandColor="#EA4335"
+      />
+
+      {/* Floor 2 Visible Upper Storefronts */}
+      <RetailStorefront
+        position={[-16.8, 16, 0]}
+        rotation={[0, Math.PI / 2, 0]}
+        brandName="ARMANI EXCHANGE"
+        tagline="Tailored Haute Couture 2026"
+        brandColor="#EC4899"
+      />
+      <RetailStorefront
+        position={[16.8, 16, 0]}
+        rotation={[0, -Math.PI / 2, 0]}
+        brandName="NIKE VAULT"
+        tagline="Limited Air Max & Jordan Drops"
+        brandColor="#2874F0"
       />
 
       {/* Upper Floor West & East Retail Facades (Floors 1 & 2) */}

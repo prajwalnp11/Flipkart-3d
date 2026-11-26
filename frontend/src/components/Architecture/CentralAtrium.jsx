@@ -80,44 +80,44 @@ function BalconyLevel({ level, y, title, subtitle }) {
       {/* West Wing Walkway Slab */}
       <mesh position={[-12.2, -0.22, 1.5]} receiveShadow>
         <boxGeometry args={[11.6, 0.44, 25]} />
-        <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
+        <meshStandardMaterial color="#F3ECE0" roughness={0.16} metalness={0.1} />
       </mesh>
       {/* East Wing Walkway Slab */}
       <mesh position={[12.2, -0.22, 1.5]} receiveShadow>
         <boxGeometry args={[11.6, 0.44, 25]} />
-        <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
+        <meshStandardMaterial color="#F3ECE0" roughness={0.16} metalness={0.1} />
       </mesh>
       {/* North / Elevator Overlook Bridge */}
       <mesh position={[0, -0.22, -8.6]} receiveShadow>
         <boxGeometry args={[36, 0.44, 8.2]} />
-        <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
+        <meshStandardMaterial color="#F3ECE0" roughness={0.16} metalness={0.1} />
       </mesh>
       {/* South Entrance Overlook Bridge */}
       <mesh position={[0, -0.22, 11.8]} receiveShadow>
         <boxGeometry args={[36, 0.44, 6]} />
-        <meshStandardMaterial color="#FFFFFF" roughness={0.15} metalness={0.1} />
+        <meshStandardMaterial color="#F3ECE0" roughness={0.16} metalness={0.1} />
       </mesh>
 
-      {/* 2. Fluted Architectural Marble Facia Edging along Atrium Void */}
+      {/* 2. Fluted Warm Limestone & Champagne Facia Edging along Atrium Void */}
       {/* West Facia */}
       <mesh position={[-6.38, -0.22, 1.5]}>
         <boxGeometry args={[0.16, 0.46, 20]} />
-        <meshStandardMaterial color="#F8FAFC" roughness={0.12} metalness={0.15} />
+        <meshStandardMaterial color="#EAE0D0" roughness={0.14} metalness={0.18} />
       </mesh>
       {/* East Facia */}
       <mesh position={[6.38, -0.22, 1.5]}>
         <boxGeometry args={[0.16, 0.46, 20]} />
-        <meshStandardMaterial color="#F8FAFC" roughness={0.12} metalness={0.15} />
+        <meshStandardMaterial color="#EAE0D0" roughness={0.14} metalness={0.18} />
       </mesh>
       {/* South Facia */}
       <mesh position={[0, -0.22, 8.8]}>
         <boxGeometry args={[12.8, 0.46, 0.16]} />
-        <meshStandardMaterial color="#F8FAFC" roughness={0.12} metalness={0.15} />
+        <meshStandardMaterial color="#EAE0D0" roughness={0.14} metalness={0.18} />
       </mesh>
       {/* North Facia */}
       <mesh position={[0, -0.22, -4.5]}>
         <boxGeometry args={[12.8, 0.46, 0.16]} />
-        <meshStandardMaterial color="#F8FAFC" roughness={0.12} metalness={0.15} />
+        <meshStandardMaterial color="#EAE0D0" roughness={0.14} metalness={0.18} />
       </mesh>
 
       {/* 3. Concealed Warm 3000K Linear LED Cove Light Ribbon along Balcony Underside */}
@@ -298,15 +298,31 @@ function BalconyLevel({ level, y, title, subtitle }) {
   );
 }
 
-// Modern High-Speed Escalator Pair
+// Modern High-Speed Operational Escalator with Animated Moving Steps
 function LuxuryEscalator({ position, rotation, reverse = false }) {
+  const stepsGroupRef = useRef();
+  const stepCount = 18;
+  const spanLength = 13.6;
+
+  useFrame((state) => {
+    if (!stepsGroupRef.current) return;
+    const speed = reverse ? -0.9 : 0.9;
+    const t = state.clock.getElapsedTime() * speed;
+    const children = stepsGroupRef.current.children;
+    for (let i = 0; i < children.length; i++) {
+      const raw = ((i / stepCount) * spanLength + t) % spanLength;
+      const wrapped = raw < 0 ? raw + spanLength : raw;
+      children[i].position.z = wrapped - spanLength / 2;
+    }
+  });
+
   return (
     <group position={position} rotation={rotation}>
       <group position={[0, 4, 0]} rotation={[reverse ? -0.55 : 0.55, 0, 0]}>
-        {/* Main Escalator Truss Cladding (Brushed Titanium Nickel) */}
+        {/* Main Escalator Truss Cladding (Warm Brushed Champagne Titanium) */}
         <mesh castShadow receiveShadow>
           <boxGeometry args={[1.3, 0.52, 14.8]} />
-          <meshStandardMaterial color="#F8FAFC" roughness={0.18} metalness={0.35} />
+          <meshStandardMaterial color="#E5DEC9" roughness={0.22} metalness={0.45} />
         </mesh>
 
         {/* Clear Glass Balustrades */}
@@ -335,31 +351,41 @@ function LuxuryEscalator({ position, rotation, reverse = false }) {
           />
         </mesh>
 
-        {/* Continuous Soft White LED Ribbon Under Handrails */}
+        {/* Continuous Warm 3000K LED Ribbon Under Handrails */}
         <mesh position={[-0.6, 1.05, 0]}>
-          <boxGeometry args={[0.03, 0.02, 14.4]} />
-          <meshStandardMaterial color="#FEF3C7" emissive="#FDE68A" emissiveIntensity={0.8} />
+          <boxGeometry args={[0.03, 0.025, 14.4]} />
+          <meshStandardMaterial color="#FEF3C7" emissive="#FDE68A" emissiveIntensity={0.9} />
         </mesh>
         <mesh position={[0.6, 1.05, 0]}>
-          <boxGeometry args={[0.03, 0.02, 14.4]} />
-          <meshStandardMaterial color="#FEF3C7" emissive="#FDE68A" emissiveIntensity={0.8} />
+          <boxGeometry args={[0.03, 0.025, 14.4]} />
+          <meshStandardMaterial color="#FEF3C7" emissive="#FDE68A" emissiveIntensity={0.9} />
         </mesh>
 
         {/* Charcoal Textured Handrails */}
         <mesh position={[-0.6, 1.15, 0]}>
           <boxGeometry args={[0.08, 0.06, 14.6]} />
-          <meshStandardMaterial color="#0F172A" roughness={0.6} />
+          <meshStandardMaterial color="#1E293B" roughness={0.55} />
         </mesh>
         <mesh position={[0.6, 1.15, 0]}>
           <boxGeometry args={[0.08, 0.06, 14.6]} />
-          <meshStandardMaterial color="#0F172A" roughness={0.6} />
+          <meshStandardMaterial color="#1E293B" roughness={0.55} />
         </mesh>
 
         {/* Metal Step Tread Deck */}
-        <mesh position={[0, 0.28, 0]}>
-          <boxGeometry args={[1.05, 0.04, 14.0]} />
-          <meshStandardMaterial color="#334155" metalness={0.85} roughness={0.25} />
+        <mesh position={[0, 0.27, 0]}>
+          <boxGeometry args={[1.05, 0.03, 14.0]} />
+          <meshStandardMaterial color="#1E293B" metalness={0.85} roughness={0.3} />
         </mesh>
+
+        {/* Animated Moving Escalator Steps */}
+        <group ref={stepsGroupRef} position={[0, 0.31, 0]}>
+          {Array.from({ length: stepCount }).map((_, idx) => (
+            <mesh key={idx}>
+              <boxGeometry args={[0.98, 0.05, 0.36]} />
+              <meshStandardMaterial color="#64748B" metalness={0.85} roughness={0.28} />
+            </mesh>
+          ))}
+        </group>
       </group>
     </group>
   );
@@ -400,7 +426,7 @@ export function CentralAtrium() {
         />
       ))}
 
-      {/* ================= 2. SIX COLOSSAL POLISHED MARBLE PILLARS ================= */}
+      {/* ================= 2. SIX SLIM ARCHITECTURAL MARBLE COLUMNS ================= */}
       {[
         [-6.4, -3.2],
         [6.4, -3.2],
@@ -410,25 +436,25 @@ export function CentralAtrium() {
         [6.4, 9.2]
       ].map(([x, z], idx) => (
         <group key={idx} position={[x, 16, z]}>
-          {/* Main Column Body in Polished Carrara Marble */}
+          {/* Main Column Body in Warm Cream Marble */}
           <mesh castShadow receiveShadow>
-            <cylinderGeometry args={[0.52, 0.52, 32, 36]} />
+            <cylinderGeometry args={[0.36, 0.36, 32, 32]} />
             <meshStandardMaterial
-              color="#FFFFFF"
-              roughness={0.14}
+              color="#F3ECE0"
+              roughness={0.16}
               metalness={0.08}
             />
           </mesh>
-          {/* Satin Nickel Architectural Collars at Every Floor Level */}
+          {/* Champagne Gold Architectural Collars at Every Floor Level */}
           {[0, 8, 16, 24, 32].map((yLevel, i) => (
             <group key={i} position={[0, yLevel - 16, 0]}>
               <mesh>
-                <cylinderGeometry args={[0.56, 0.56, 0.16, 36]} />
-                <meshStandardMaterial color="#CBD5E1" metalness={0.92} roughness={0.15} />
+                <cylinderGeometry args={[0.41, 0.41, 0.14, 32]} />
+                <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
               </mesh>
-              <mesh position={[0, 0.09, 0]}>
-                <torusGeometry args={[0.56, 0.015, 12, 36]} rotation={[Math.PI / 2, 0, 0]} />
-                <meshStandardMaterial color="#E2E8F0" metalness={0.95} roughness={0.1} />
+              <mesh position={[0, 0.08, 0]}>
+                <torusGeometry args={[0.41, 0.015, 12, 32]} rotation={[Math.PI / 2, 0, 0]} />
+                <meshStandardMaterial color="#E5D3B3" metalness={0.92} roughness={0.14} />
               </mesh>
             </group>
           ))}
@@ -438,11 +464,13 @@ export function CentralAtrium() {
       {/* ================= 3. SUSPENDED LUXURY CHANDELIER ================= */}
       <LuxurySkylightChandelier />
 
-      {/* ================= 4. MODERN HIGH-SPEED ESCALATORS ================= */}
+      {/* ================= 4. OPERATIONAL HIGH-SPEED ESCALATORS ================= */}
       {/* Ground to Floor 1 Escalator */}
       <LuxuryEscalator position={[-3.6, 0, 2.5]} rotation={[0, 0, 0]} reverse={false} />
       {/* Floor 1 to Floor 2 Escalator */}
       <LuxuryEscalator position={[3.6, 8, 2.5]} rotation={[0, 0, 0]} reverse={true} />
+      {/* Floor 2 to Floor 3 Escalator */}
+      <LuxuryEscalator position={[-3.6, 16, 2.5]} rotation={[0, 0, 0]} reverse={false} />
 
       {/* ================= 5. GRAND SKYLIGHT & CEILING ARCHITECTURE (Y = 32) ================= */}
       <group position={[0, 32, 2.5]}>

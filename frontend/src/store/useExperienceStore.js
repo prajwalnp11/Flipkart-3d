@@ -67,8 +67,8 @@ export const useExperienceStore = create((set, get) => ({
   elevatorStatus: 'idle', // 'idle' | 'approaching' | 'doors_opening' | 'boarding' | 'moving' | 'arrived' | 'exiting'
   _elevatorTimers: [],
 
-  // Customer Avatar & Navigation Mode (Section 4)
-  navigationMode: 'guided', // 'guided' | 'avatar'
+  // Customer Avatar & Navigation Mode (Section 4 & Task 6)
+  navigationMode: 'free', // 'free' | 'avatar' | 'guided'
   avatarPosition: [0, 0, 10],
   avatarRotation: 0,
   avatarMoving: false,
@@ -577,10 +577,17 @@ export const useExperienceStore = create((set, get) => ({
   setNavigationMode: (mode) => {
     sounds.playClick();
     set({ navigationMode: mode });
-    get().addToast('Navigation Mode', mode === 'avatar' ? '🎮 Free Avatar Mode (Use WASD / Arrows to walk)' : '🎥 Cinematic Guided Mode');
+    const messages = {
+      free: 'Free 3D Explore (Drag to rotate • Scroll to zoom • Right-drag to pan • WASD/Arrows to move)',
+      avatar: 'Customer Walk Mode (Use WASD / Arrows to walk • E to interact)',
+      guided: 'Guided Eye-Level Mall View'
+    };
+    get().addToast('Camera Mode', messages[mode] || messages.free);
   },
   toggleNavigationMode: () => {
-    const next = get().navigationMode === 'guided' ? 'avatar' : 'guided';
+    const order = ['free', 'avatar', 'guided'];
+    const idx = order.indexOf(get().navigationMode);
+    const next = order[(idx + 1) % order.length];
     get().setNavigationMode(next);
   },
   updateAvatarState: (pos, rot, isMoving) => {

@@ -22,7 +22,8 @@ import {
   Smartphone,
   X,
   Tag,
-  Home
+  Home,
+  Compass
 } from 'lucide-react';
 
 export function NavigationHUD() {
@@ -38,6 +39,7 @@ export function NavigationHUD() {
   const enterBrandStore = useStore((state) => state.enterBrandStore);
   const exitBrandStore = useStore((state) => state.exitBrandStore);
   const navigationMode = useStore((state) => state.navigationMode);
+  const setNavigationMode = useStore((state) => state.setNavigationMode);
   const toggleNavigationMode = useStore((state) => state.toggleNavigationMode);
   const interactionPrompt = useStore((state) => state.interactionPrompt);
   const quality = useStore((state) => state.quality || 'high');
@@ -181,30 +183,47 @@ export function NavigationHUD() {
             })}
           </div>
 
-          {/* Right: Avatar Mode Toggle, Search, Mute & Cart */}
+          {/* Right: Camera / Navigation Mode Switcher, Search, Mute & Cart */}
           <div className="flex items-center gap-2 pointer-events-auto">
-            {/* Free Avatar Walk vs Guided Tour Toggle (Section 4) */}
-            <button
-              onClick={toggleNavigationMode}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all border shadow-sm ${
-                navigationMode === 'avatar'
-                  ? 'bg-emerald-500 text-white border-emerald-400 shadow-glow-blue'
-                  : 'bg-[#0F172A]/90 backdrop-blur-md text-slate-300 hover:bg-[#1E293B] border-slate-700/80'
-              }`}
-              title="Toggle Avatar Walk Mode (WASD) vs Cinematic Guided Mode"
-            >
-              {navigationMode === 'avatar' ? (
-                <>
-                  <Gamepad2 className="w-4 h-4 text-white" />
-                  <span className="hidden md:inline">Avatar Walk (WASD)</span>
-                </>
-              ) : (
-                <>
-                  <Video className="w-4 h-4 text-cyan-400" />
-                  <span className="hidden md:inline">Guided Tour</span>
-                </>
-              )}
-            </button>
+            {/* Segmented Mode Switcher: Free 3D Explore | Walk Mode | Guided */}
+            <div className="flex items-center p-0.5 rounded-xl bg-[#0F172A]/90 backdrop-blur-md border border-slate-700/80 shadow-sm">
+              <button
+                onClick={() => setNavigationMode('free')}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  navigationMode === 'free'
+                    ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+                title="Free 3D Camera (Drag to rotate, Scroll to zoom, Right-drag to pan, WASD/Arrows)"
+              >
+                <Compass className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">Free Explore</span>
+              </button>
+              <button
+                onClick={() => setNavigationMode('avatar')}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  navigationMode === 'avatar'
+                    ? 'bg-emerald-500 text-white shadow-sm'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+                title="Customer Walking Mode (WASD / Arrows + Mouse Look + [E] Interact)"
+              >
+                <Gamepad2 className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">Walk Mode</span>
+              </button>
+              <button
+                onClick={() => setNavigationMode('guided')}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  navigationMode === 'guided'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+                title="Guided Eye-Level Mall View"
+              >
+                <Video className="w-3.5 h-3.5" />
+                <span className="hidden lg:inline">Guided</span>
+              </button>
+            </div>
 
             <button
               onClick={() => setSearchOpen(true)}
@@ -362,6 +381,17 @@ export function NavigationHUD() {
             >
               <ChevronRight className="w-5 h-5" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ================= 3B. BOTTOM-CENTER CONTROLS HINT ================= */}
+      {!selectedProduct && (navigationMode === 'free' || navigationMode === 'avatar') && (
+        <div className="hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-30 pointer-events-none">
+          <div className="px-4 py-1.5 rounded-full bg-[#0F172A]/80 backdrop-blur-md border border-slate-700/70 text-[11px] font-semibold text-slate-300 shadow-lg">
+            {navigationMode === 'free'
+              ? 'Drag: Rotate • Scroll: Zoom • Right-Drag: Pan • WASD / Arrows: Glide • Click Products/Stores to Interact'
+              : 'WASD / Arrows: Walk • Shift: Jog • Drag: Look Around • E: Enter Store / Inspect / Elevator'}
           </div>
         </div>
       )}

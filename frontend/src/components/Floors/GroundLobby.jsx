@@ -1601,53 +1601,55 @@ export function GroundLobby() {
 
   return (
     <group position={[0, 0, 0]}>
-      {/* ================= 1. PHOTOREALISTIC POLISHED CARRARA MARBLE GROUND LOBBY FLOOR ================= */}
+      {/* ================= 1. PHOTOREALISTIC WARM CALACATTA MARBLE GROUND LOBBY FLOOR ================= */}
       <mesh position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[38, 32]} />
         <meshStandardMaterial
           map={marbleTexture}
           roughnessMap={marbleRoughness}
-          color="#FFFFFF"
-          roughness={0.11}
-          metalness={0.24}
-          envMapIntensity={1.8}
+          color="#FAF6EE"
+          roughness={0.12}
+          metalness={0.22}
+          envMapIntensity={1.6}
         />
       </mesh>
 
-      {/* Dark Nero Marquina Marble Center Aisle Inlay with Gold Inlay Seam */}
+      {/* Dark Nero Marquina Marble Center Aisle Inlay with Champagne Gold Seam */}
       <mesh position={[0, -0.045, 2.0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
         <planeGeometry args={[4.2, 16]} />
         <meshStandardMaterial
-          color="#0F172A"
+          color="#171C26"
           roughness={0.12}
-          metalness={0.35}
+          metalness={0.32}
         />
       </mesh>
       {/* Architectural Champagne Gold Border Lines on Center Aisle */}
       <mesh position={[-2.1, -0.042, 2.0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[0.04, 16]} />
-        <meshStandardMaterial color="#E2E8F0" metalness={0.92} roughness={0.18} />
+        <planeGeometry args={[0.06, 16]} />
+        <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
       </mesh>
       <mesh position={[2.1, -0.042, 2.0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[0.04, 16]} />
-        <meshStandardMaterial color="#E2E8F0" metalness={0.92} roughness={0.18} />
+        <planeGeometry args={[0.06, 16]} />
+        <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
       </mesh>
 
-      {/* Decorative Floor Inlay Rings in Lobby Center (Polished Architectural Metals) */}
+      {/* Decorative Floor Inlay Rings in Lobby Center (Champagne Gold & Bronze) */}
       <mesh position={[0, 0.01, 2.0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[6.4, 6.55, 64]} />
-        <meshStandardMaterial color="#CBD5E1" metalness={0.92} roughness={0.15} />
+        <meshStandardMaterial color="#C5A880" metalness={0.9} roughness={0.18} />
       </mesh>
       <mesh position={[0, 0.01, 2.0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[6.75, 6.85, 64]} />
-        <meshStandardMaterial color="#E2E8F0" metalness={0.92} roughness={0.15} />
+        <meshStandardMaterial color="#8B6F47" metalness={0.88} roughness={0.2} />
       </mesh>
 
-      {/* ================= 2. POTTED PALM TREES (Matching Reference Video 1 & Video 2) ================= */}
+      {/* ================= 2. POTTED PALM TREES ================= */}
       <PottedPalmTree position={[-3.6, 0, 8.2]} scale={1.1} />
       <PottedPalmTree position={[3.6, 0, 8.2]} scale={1.1} />
       <PottedPalmTree position={[-5.4, 0, 3.8]} scale={1.15} />
       <PottedPalmTree position={[5.4, 0, 3.8]} scale={1.15} />
+      <PottedPalmTree position={[-2.6, 0, -4.5]} scale={1.05} />
+      <PottedPalmTree position={[2.6, 0, -4.5]} scale={1.05} />
 
       {/* ================= 3. LUXURY INTERACTIVE CATEGORY DIRECTORY PANEL ================= */}
       <CategoryDirectoryPanel position={[-2.8, 0, 6.4]} rotation={[0, 0.35, 0]} onSelectFloor={travelToFloor} />

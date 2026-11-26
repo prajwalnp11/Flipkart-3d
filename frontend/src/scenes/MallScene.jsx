@@ -1,5 +1,6 @@
-import React, { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import React, { useRef, useEffect } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { useStore } from '../store/useStore';
 import { FlipkartBuilding } from '../components/Building/FlipkartBuilding';
@@ -19,7 +20,7 @@ const FLOOR_Y_MAP = {
   3: 24   // Floor 3: Home & Living Showroom
 };
 
-// Camera Rig that smoothly animates camera position & lookAt between mall floors and avatar
+// Camera Rig supporting Free 3D Orbit/Pan/Zoom/WASD Exploration, Customer Walk Mode, and Guided View
 function CameraRig() {
   const currentView = useStore((state) => state.currentView);
   const phase = useStore((state) => state.phase);
@@ -32,62 +33,201 @@ function CameraRig() {
   const avatarPosition = useStore((state) => state.avatarPosition || [0, 0, 8]);
   const avatarRotation = useStore((state) => state.avatarRotation || 0);
 
+  const { camera, gl } = useThree();
+  const controlsRef = useRef();
+  const keysDown = useRef({});
+  const dragLookOffset = useRef({ yaw: 0, pitch: 0, dragging: false, lastX: 0, lastY: 0 });
+
   const targetCamPos = useRef(new THREE.Vector3(0, 3.6, 18));
   const targetLookAt = useRef(new THREE.Vector3(0, 5.2, -2));
   const currentLookAt = useRef(new THREE.Vector3(0, 5.2, -2));
   const elevatorCurrentY = useRef(0);
+  const lastContextKey = useRef('');
 
   const activeFloor = selectedFloor !== undefined ? selectedFloor : currentFloor;
+  const currentFloorY = FLOOR_Y_MAP[activeFloor] ?? 0;
+
+  const isExteriorPhase = currentView === 'EXTERIOR' || phase === 'exterior';
+  const isEnteringPhase = currentView === 'ENTERING' || phase === 'entering';
+  const isLobbyPhase = currentView === 'GROUND_LOBBY' || phase === 'lobby';
+  const isToElevatorPhase = currentView === 'TRANSITION_ELEVATOR' || phase === 'toElevator';
+  const isRidingPhase = currentView === 'IN_ELEVATOR' || phase === 'riding' || phase === 'arriving';
+  const isShowroomPhase = currentView === 'SHOWROOM' || phase === 'showroom';
+  const isInspecting = phase === 'inspecting' || currentView === 'PRODUCT_INSPECT';
+
+  const isFreeExplore =
+    navigationMode === 'free' &&
+    !isExteriorPhase &&
+    !isEnteringPhase &&
+    !isToElevatorPhase &&
+    !isRidingPhase &&
+    !isInspecting;
+
+  // Keyboard tracking for Free Explore WASD/Arrows gliding
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+      keysDown.current[e.key.toLowerCase()] = true;
+    };
+    const onKeyUp = (e) => {
+      keysDown.current[e.key.toLowerCase()] = false;
+    };
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+    };
+  }, []);
+
+  // Mouse-drag look-around offset for Customer Walking Mode ('avatar')
+  useEffect(() => {
+    const dom = gl.domElement;
+    if (!dom) return;
+
+    const onPointerDown = (e) => {
+      if (navigationMode !== 'avatar') return;
+      dragLookOffset.current.dragging = true;
+      dragLookOffset.current.lastX = e.clientX;
+      dragLookOffset.current.lastY = e.clientY;
+    };
+    const onPointerMove = (e) => {
+      if (!dragLookOffset.current.dragging || navigationMode !== 'avatar') return;
+      const dx = e.clientX - dragLookOffset.current.lastX;
+      const dy = e.clientY - dragLookOffset.current.lastY;
+      dragLookOffset.current.lastX = e.clientX;
+      dragLookOffset.current.lastY = e.clientY;
+      dragLookOffset.current.yaw = THREE.MathUtils.clamp(dragLookOffset.current.yaw - dx * 0.005, -1.4, 1.4);
+      dragLookOffset.current.pitch = THREE.MathUtils.clamp(dragLookOffset.current.pitch + dy * 0.004, -0.45, 0.75);
+    };
+    const onPointerUp = () => {
+      dragLookOffset.current.dragging = false;
+    };
+
+    dom.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    return () => {
+      dom.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+    };
+  }, [gl, navigationMode]);
+
+  // Smoothly frame the new floor/storefront whenever floor, brand, or mode changes into Free Explore
+  useEffect(() => {
+    if (!isFreeExplore) return;
+    const key = `${activeFloor}-${selectedBrand || 'none'}-${navigationMode}`;
+    if (lastContextKey.current === key) return;
+    lastContextKey.current = key;
+
+    if (selectedBrand) {
+      camera.position.set(0, currentFloorY + 2.1, 6.2);
+      if (controlsRef.current) {
+        controlsRef.current.target.set(0, currentFloorY + 1.1, -0.8);
+        controlsRef.current.update();
+      }
+    } else if (activeFloor === 0) {
+      // Natural human eye-level view showing ground lobby, kiosks, storefronts, escalators, elevator & upper balconies
+      camera.position.set(0, 2.2, 13.8);
+      if (controlsRef.current) {
+        controlsRef.current.target.set(0, 2.5, -2.5);
+        controlsRef.current.update();
+      }
+    } else {
+      camera.position.set(0, currentFloorY + 2.4, 10.8);
+      if (controlsRef.current) {
+        controlsRef.current.target.set(0, currentFloorY + 1.5, -1.5);
+        controlsRef.current.update();
+      }
+    }
+  }, [isFreeExplore, activeFloor, selectedBrand, navigationMode, currentFloorY, camera]);
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05);
-    const currentFloorY = FLOOR_Y_MAP[activeFloor] ?? 0;
     const destFloorY = FLOOR_Y_MAP[targetFloor] ?? 0;
 
-    const isExteriorPhase = currentView === 'EXTERIOR' || phase === 'exterior';
-    const isEnteringPhase = currentView === 'ENTERING' || phase === 'entering';
-    const isLobbyPhase = currentView === 'GROUND_LOBBY' || phase === 'lobby';
-    const isToElevatorPhase = currentView === 'TRANSITION_ELEVATOR' || phase === 'toElevator';
-    const isRidingPhase = currentView === 'IN_ELEVATOR' || phase === 'riding' || phase === 'arriving';
-    const isShowroomPhase = currentView === 'SHOWROOM' || phase === 'showroom';
+    // 1. Free 3D Exploration Mode (OrbitControls + WASD/Arrows + Mall Boundary Clamping)
+    if (isFreeExplore && controlsRef.current) {
+      const controls = controlsRef.current;
+
+      // WASD / Arrow horizontal glide relative to camera facing direction
+      const forward = new THREE.Vector3();
+      camera.getWorldDirection(forward);
+      forward.y = 0;
+      if (forward.lengthSq() > 0.0001) forward.normalize();
+      const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+
+      const moveSpeed = (keysDown.current['shift'] ? 9.5 : 6.2) * dt;
+      const moveDelta = new THREE.Vector3();
+
+      if (keysDown.current['w'] || keysDown.current['arrowup']) moveDelta.addScaledVector(forward, moveSpeed);
+      if (keysDown.current['s'] || keysDown.current['arrowdown']) moveDelta.addScaledVector(forward, -moveSpeed);
+      if (keysDown.current['a'] || keysDown.current['arrowleft']) moveDelta.addScaledVector(right, -moveSpeed);
+      if (keysDown.current['d'] || keysDown.current['arrowright']) moveDelta.addScaledVector(right, moveSpeed);
+
+      if (moveDelta.lengthSq() > 0) {
+        camera.position.add(moveDelta);
+        controls.target.add(moveDelta);
+      }
+
+      // Clamp camera and target inside mall architectural bounds to prevent clipping/leaving
+      const minX = selectedBrand ? -9.0 : -16.5;
+      const maxX = selectedBrand ? 9.0 : 16.5;
+      const minZ = selectedBrand ? -7.2 : -10.5;
+      const maxZ = selectedBrand ? 8.0 : 15.8;
+
+      controls.target.x = THREE.MathUtils.clamp(controls.target.x, minX + 1.5, maxX - 1.5);
+      controls.target.y = THREE.MathUtils.clamp(controls.target.y, currentFloorY + 0.5, currentFloorY + 12.0);
+      controls.target.z = THREE.MathUtils.clamp(controls.target.z, minZ + 1.0, maxZ - 1.0);
+
+      camera.position.x = THREE.MathUtils.clamp(camera.position.x, minX, maxX);
+      camera.position.y = THREE.MathUtils.clamp(camera.position.y, Math.max(0.85, currentFloorY + 0.75), 29.5);
+      camera.position.z = THREE.MathUtils.clamp(camera.position.z, minZ, maxZ);
+
+      controls.update();
+      currentLookAt.current.copy(controls.target);
+      return;
+    }
+
+    // 2. Cinematic / Elevator / Avatar Camera Modes
+    lastContextKey.current = '';
 
     if (isExteriorPhase) {
       targetCamPos.current.set(0, 3.6, 18);
       targetLookAt.current.set(0, 5.2, -2);
       elevatorCurrentY.current = 0;
     } else if (isEnteringPhase) {
-      // Smooth cinematic glide into the ground floor grand atrium with upward gaze
-      targetCamPos.current.set(0, 2.4, 12.0);
-      targetLookAt.current.set(0, 6.5, -1.0);
+      // Natural human eye-level entry into the grand mall concourse
+      targetCamPos.current.set(0, 2.2, 13.8);
+      targetLookAt.current.set(0, 2.5, -2.5);
       elevatorCurrentY.current = 0;
     } else if (isToElevatorPhase) {
-      // Camera smoothly moves towards the glass elevator entrance at current floor
       targetCamPos.current.set(0, currentFloorY + 1.8, -3.6);
       targetLookAt.current.set(0, currentFloorY + 1.8, -7.0);
       elevatorCurrentY.current = currentFloorY;
     } else if (isRidingPhase) {
-      // Camera rides inside the panoramic glass elevator cab during vertical transit
       elevatorCurrentY.current = THREE.MathUtils.lerp(
         elevatorCurrentY.current,
         destFloorY,
         1.8 * dt
       );
       if (elevatorStatus === 'exiting') {
-        // Step out of the panoramic cabin into the destination floor concourse
         targetCamPos.current.set(0, destFloorY + 2.0, -1.5);
         targetLookAt.current.set(0, destFloorY + 1.4, 4.5);
       } else {
         targetCamPos.current.set(0, elevatorCurrentY.current + 1.75, -6.8);
-        // Look outward through front panoramic glass into the open central atrium
         targetLookAt.current.set(0, elevatorCurrentY.current + 1.75, 4.5);
       }
     } else if (navigationMode === 'avatar') {
-      // Third-Person Over-the-Shoulder Camera following Customer Avatar (Section 4)
-      const offset = new THREE.Vector3(0, 1.95, 3.9).applyAxisAngle(new THREE.Vector3(0, 1, 0), avatarRotation);
+      // Third-Person Over-the-Shoulder Camera with optional mouse look-around
+      const camYaw = avatarRotation + dragLookOffset.current.yaw;
+      const camHeight = 1.95 + dragLookOffset.current.pitch * 1.4;
+      const offset = new THREE.Vector3(0, camHeight, 4.0).applyAxisAngle(new THREE.Vector3(0, 1, 0), camYaw);
       targetCamPos.current.set(
-        avatarPosition[0] + offset.x,
-        avatarPosition[1] + offset.y,
-        avatarPosition[2] + offset.z
+        THREE.MathUtils.clamp(avatarPosition[0] + offset.x, -16.2, 16.2),
+        Math.max(currentFloorY + 0.85, avatarPosition[1] + offset.y),
+        THREE.MathUtils.clamp(avatarPosition[2] + offset.z, -10.2, 15.2)
       );
       targetLookAt.current.set(
         avatarPosition[0],
@@ -95,31 +235,44 @@ function CameraRig() {
         avatarPosition[2]
       );
     } else if (isShowroomPhase && selectedBrand) {
-      // Inside selected Brand Store Boutique on Floor 1 (Section 6)
       elevatorCurrentY.current = currentFloorY;
-      targetCamPos.current.set(0, currentFloorY + 1.8, 4.8);
-      targetLookAt.current.set(0, currentFloorY + 1.05, 0);
+      targetCamPos.current.set(0, currentFloorY + 2.1, 6.2);
+      targetLookAt.current.set(0, currentFloorY + 1.1, -0.8);
     } else if (isLobbyPhase) {
-      // Grand Atrium perspective looking up into the 4-floor void (Section 3)
-      targetCamPos.current.set(0, 2.4, 12.0);
-      targetLookAt.current.set(0, 6.5, -1.0);
+      // Eye-level Grand Lobby view showing storefronts, kiosk, escalators, elevator & balconies
+      targetCamPos.current.set(0, 2.2, 13.8);
+      targetLookAt.current.set(0, 2.5, -2.5);
       elevatorCurrentY.current = 0;
     } else {
-      // Standard Floor View
       elevatorCurrentY.current = currentFloorY;
-      targetCamPos.current.set(0, currentFloorY + 2.5, 9.2);
-      targetLookAt.current.set(0, currentFloorY + 1.4, 0);
+      targetCamPos.current.set(0, currentFloorY + 2.4, 10.8);
+      targetLookAt.current.set(0, currentFloorY + 1.5, -1.5);
     }
 
-    // Smooth camera position dampening
-    state.camera.position.lerp(targetCamPos.current, 3.0 * dt);
-
-    // Smooth lookAt dampening
-    currentLookAt.current.lerp(targetLookAt.current, 3.4 * dt);
+    state.camera.position.lerp(targetCamPos.current, 3.2 * dt);
+    currentLookAt.current.lerp(targetLookAt.current, 3.6 * dt);
     state.camera.lookAt(currentLookAt.current);
   });
 
-  return null;
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      makeDefault
+      enabled={isFreeExplore}
+      enableDamping
+      dampingFactor={0.07}
+      enableRotate
+      enableZoom
+      enablePan
+      rotateSpeed={0.65}
+      zoomSpeed={0.85}
+      panSpeed={0.7}
+      minDistance={2.2}
+      maxDistance={22.0}
+      minPolarAngle={0.22}
+      maxPolarAngle={Math.PI * 0.485}
+    />
+  );
 }
 
 // Adaptive Performance Monitor (UX Principle #8)
@@ -174,64 +327,64 @@ export function MallScene() {
   const shadowsEnabled = quality !== 'low';
 
   return (
-    <div className={`absolute inset-0 w-full h-full overflow-hidden ${isExterior ? 'bg-[#070B14]' : 'bg-[#F8FAFC]'}`}>
+    <div className={`absolute inset-0 w-full h-full overflow-hidden ${isExterior ? 'bg-[#070B14]' : 'bg-[#F3ECE0]'}`}>
       <Canvas
-        camera={{ position: [0, 3.6, 18], fov: 52 }}
+        camera={{ position: [0, 3.6, 18], fov: 58 }}
         gl={{
           antialias: true,
           alpha: false,
           toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.15
+          toneMappingExposure: 1.12
         }}
         dpr={dpr}
       >
-        {/* Dynamic Architectural Sky Background & Atmospheric Fog */}
-        <color attach="background" args={[isExterior ? '#070B14' : '#F8FAFC']} />
+        {/* Dynamic Architectural Sky Background & Warm Cream Atmospheric Fog */}
+        <color attach="background" args={[isExterior ? '#070B14' : '#F3ECE0']} />
         <fog
           attach="fog"
           args={[
-            isExterior ? '#070B14' : '#F1F5F9',
-            isExterior ? 28 : 45,
-            isExterior ? 85 : 120
+            isExterior ? '#070B14' : '#EFE6D8',
+            isExterior ? 28 : 48,
+            isExterior ? 85 : 125
           ]}
         />
 
-        {/* Balanced Architectural Daylight & Hemisphere Illumination */}
+        {/* Balanced Warm Architectural Daylight & Hemisphere Illumination */}
         <hemisphereLight
-          skyColor={isExterior ? '#1E3A8A' : '#FFFFFF'}
-          groundColor={isExterior ? '#0B0F19' : '#F8FAFC'}
-          intensity={isExterior ? 1.25 : 1.45}
+          skyColor={isExterior ? '#1E3A8A' : '#FFFDF8'}
+          groundColor={isExterior ? '#0B0F19' : '#E8DFD1'}
+          intensity={isExterior ? 1.25 : 1.35}
         />
 
-        {/* Soft Ambient Daylight Fill */}
+        {/* Soft Ambient Warm Daylight Fill */}
         <ambientLight
-          intensity={isExterior ? 0.65 : 0.75}
-          color={isExterior ? '#E0F2FE' : '#FFFDF7'}
+          intensity={isExterior ? 0.65 : 0.7}
+          color={isExterior ? '#E0F2FE' : '#FFF8EB'}
         />
 
         {/* Primary Natural Sunlight Streaming Through Skylight */}
         <directionalLight
           position={isExterior ? [14, 28, 14] : [8, 36, 6]}
-          intensity={isExterior ? 1.65 : 2.2}
+          intensity={isExterior ? 1.65 : 2.0}
           castShadow={shadowsEnabled}
           shadow-mapSize={shadowMapSize}
           shadow-bias={-0.0001}
-          color={isExterior ? '#FFFFFF' : '#FFFBF5'}
+          color={isExterior ? '#FFFFFF' : '#FFF7E6'}
         />
 
         {/* Soft Sky-Blue Secondary Daylight Bounce */}
         <directionalLight
           position={[-10, 32, -6]}
-          intensity={isExterior ? 0.85 : 0.9}
-          color={isExterior ? '#00F0FF' : '#E0F2FE'}
+          intensity={isExterior ? 0.85 : 0.75}
+          color={isExterior ? '#00F0FF' : '#E6F0FA'}
         />
 
         {/* Warm 3000K Interior Architectural Fill Light */}
         {!isExterior && (
           <directionalLight
             position={[0, -2, 10]}
-            intensity={0.4}
-            color="#FEF3C7"
+            intensity={0.45}
+            color="#FDE68A"
           />
         )}
 
